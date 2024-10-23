@@ -1,0 +1,9 @@
+controller:
+  service:
+    external:
+      enabled: false
+    internal:
+      enabled: true
+      externalTrafficPolicy: Local
+      annotations:
+        networking.gke.io/load-balancer-type: "Internal"

@@ -1,0 +1,6 @@
+controller:
+  service:
+    loadBalancerSourceRanges:
+    %{ for ip_range in lb_source_ranges ~}
+      - ${ip_range}
+    %{ endfor ~}

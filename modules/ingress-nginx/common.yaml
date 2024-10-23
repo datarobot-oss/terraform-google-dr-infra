@@ -1,0 +1,4 @@
+controller:
+  admissionWebhooks:
+    enabled: false
+  replicaCount: 3

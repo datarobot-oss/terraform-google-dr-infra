@@ -1,0 +1,13 @@
+provider: google
+domainFilters:
+- ${domain}
+sources:
+- ingress
+policy: sync
+txtOwnerId: ${clusterName}
+google:
+  project: ${projectId}
+  zoneVisibility: ${zoneVisibility}
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: ${serviceAccount}
