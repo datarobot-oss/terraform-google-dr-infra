@@ -14,7 +14,7 @@ module "datarobot_infra" {
   name              = local.name
   google_project_id = local.project_id
   region            = local.region
-  domain_name       = "${local.name}.rd.int.datarobot.com"
+  domain_name       = "${local.name}.yourdomain.com"
 
   existing_vpc_name                     = "existing-vpc-name"
   existing_kubernetes_nodes_subnet_name = "existing-subnet-name"

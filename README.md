@@ -60,6 +60,177 @@ terraform apply
 terraform destroy
 ```
 
+## Module Descriptions
+
+### Network
+#### Toggle
+- `create_network` to create a new Google VPC
+- `existing_vpc_name`, `existing_kubernetes_nodes_subnet_name`, `existing_kubernetes_pods_range_name`, and `existing_kubernetes_services_range_name` to use an existing VPC and subnet
+
+#### Description
+Create a new Google VPC with one subnet using a `/20` slice of `network_address_space` and a NAT gateway attached.
+
+`kubernetes_pod_cidr` and `kubernetes_service_cidr` are secondary ranges within the subnet which will be used for the Kubernetes pod and service IPs, respectively.
+
+Only the priamry the `kubernetes_pod_cidr` IPs are attached to the Cloud NAT gateway.
+
+#### Permissions
+TBD
+
+
+### DNS
+#### Toggle
+- `create_dns_zones` to create new Google Cloud DNS zones
+- `existing_public_dns_zone_name` / `existing_private_dns_zone_name` to use existing Google Cloud DNS zones
+
+#### Description
+Create new public and/or private DNS zones with name `domain_name`.
+
+A public Cloud DNS zone is used by `external_dns` to create records for the DataRobot ingress resources when `internet_facing_ingress_lb` is `true`. It is also used for DNS validation when using `cert_manager` and `cert_manager_letsencrypt_clusterissuers`.
+
+A private Cloud DNS zone is used by `external_dns` to create records for the DataRobot ingress resources when `internet_facing_ingress_lb` is `false`.
+
+#### Permissions
+TBD
+
+
+### Storage
+#### Toggle
+- `create_storage` to create a new Google Cloud Storage Bucket
+- `existing_gcs_bucket_name` to use an existing Google Cloud Storage Bucket
+
+#### Description
+Create a new GCS Bucket with prefix `name` and name `datarobot`.
+
+The DataRobot application will use this storage account for persistent file storage.
+
+#### Permissions
+TBD
+
+
+### Container Registry
+#### Toggle
+- `create_container_registry` to create a new Google Artifact Registry Repository
+- `existing_artifact_registry_repo_id` to use an existing Google Artifact Registry Repository
+
+#### Description
+Create a new GAR repository with name `name`.
+
+The DataRobot application will use this registry to host custom images created by various services.
+
+#### Permissions
+TBD
+
+
+### Kubernetes
+#### Toggle
+- `create_kubernetes_cluster` to create a new Google Kubernetes Engine Cluster
+
+#### Description
+Create a new GKE cluster to host the DataRobot application and any other helm charts installed by this module.
+
+By default, the Kubernetes cluster API endpoint is accessible both via a private endpoint created within the same VPC as well as publicly over the internet. GKE nodes always communicate with the control plane using the private IP address. Public endpoint access can be restricted using the `kubernetes_cluster_endpoint_access_list` variable or disabled completely by setting `kubernetes_cluster_endpoint_public_access` to `false`.
+
+When `kubernetes_cluster_endpoint_public_access` is `false`, Kubernetes management operations such as `kubectl` and `helm` commands (including the Helm chart installs performed by this Terraform module) must be run from a host which can access the Kubernetes cluster API private endpoint. By default, any host within the GKE nodes subnet has access but this can be extended using the `kubernetes_cluster_endpoint_access_list` variable. This can be helpful when running this Terraform module from a host that resides within the same VPC as the GKE cluster but in a different subnet than the GKE nodes.
+
+Two node groups are created:
+- A `primary` node group intended to host the majority of the DataRobot pods
+- A `gpu` node group intended to host GPU workload pods containing the label `datarobot.com/node-capability: gpu` and taint `nvidia.com/gpu:NoSchedule`
+
+By default, slices of `network_address_space` will be used for the cluster nodes and control plane private endpoint IPs. It is best to use a separate address space for `kubernetes_pod_cidr` and `kubernetes_service_cidr` as these are secondary (aliased) ranges.
+
+#### Permissions
+TBD
+
+
+### App Identity
+#### Toggle
+- `create_app_identity` to create a new Google Service account to represent the DataRobot application
+
+#### Description
+Create a new GKE Service Account with `roles/storage.admin` access to the Google Cloud Storage bucket and `roles/artifactregistry.writer` access to the Google Artifact Registry Repository.
+
+Workload identities are created for each `datarobot_service_accounts` within the `datarobot_namespace` and attached to this Service Account. This allows those pods running with those service accounts to access file storage and the artifact registry.
+
+#### Permissions
+TBD
+
+
+### Helm Chart - ingress-nginx
+#### Toggle
+- `ingress_nginx` to install the `ingress-nginx` helm chart
+
+#### Description
+Uses the [terraform-helm-release](https://github.com/terraform-module/terraform-helm-release) module to install the `https://kubernetes.github.io/ingress-nginx/ingress-nginx` helm chart into the `ingress-nginx` namespace.
+
+The `ingress-nginx` helm chart will trigger the deployment of an Google Network Load Balancer directing traffic to the `ingress-nginx-controller` Kubernetes services.
+
+Values passed to the helm chart can be overridden by passing a custom values file via the `ingress_nginx_values` variable as demonstrated in the [complete example](examples/complete/main.tf).
+
+
+#### Permissions
+Not required
+
+
+### Helm Chart - cert-manager
+#### Toggle
+- `cert_manager` to install the `cert-manager` helm chart
+
+#### Description
+Uses the [terraform-helm-release](https://github.com/terraform-module/terraform-helm-release) module to install the `https://charts.jetstack.io/cert-manager` helm chart into the `cert-manager` namespace.
+
+A Google Service Account is created for the `cert-manager` Kubernetes service account running in the `cert-manager` namespace that allows the creation of DNS resources within the specified DNS zone.
+
+`cert-manager` can be used by the DataRobot application to create and manage various certificates including the application.
+
+When `cert_manager_letsencrypt_clusterissuers` is enabled, `letsencrypt-staging` and `letsencrypt-prod` ClusterIssuers will be created which can be used by the `datarobot-google` umbrella chart to issue certificates used by the DataRobot application. The default values in that helm chart (as of version 10.2) have `global.ingress.tls.enabled`, `global.ingress.tls.certmanager`, and `global.ingress.tls.issuer` as `letsencrypt-prod` which will use the `letsencrypt-prod` ClusterIssuer to issue a public ACME certificate as the TLS certificate used by the Kubernetes ingress resources.
+
+Values passed to the helm chart can be overridden by passing a custom values file via the `cert_manager_values` variable as demonstrated in the [complete example](examples/complete/main.tf).
+
+#### Permissions
+TBD
+
+
+### Helm Chart - external-dns
+#### Toggle
+- `external_dns` to install the `external-dns` helm chart
+
+#### Description
+Uses the [terraform-helm-release](https://github.com/terraform-module/terraform-helm-release) module to install the `https://charts.bitnami.com/bitnami/external-dns` helm chart into the `external-dns` namespace.
+
+A Google Service Account is created for the `external-dns` Kubernetes service account running in the `external-dns` namespace that allows the creation of DNS resources within the specified DNS zone.
+
+`external-dns` is used to automatically create DNS records for ingress resources in the Kubernetes cluster. When the DataRobot application is installed and the ingress resources are created, `external-dns` will automatically create a DNS record pointing at the ingress resource.
+
+Values passed to the helm chart can be overridden by passing a custom values file via the `external_dns_values` variable as demonstrated in the [complete example](examples/complete/main.tf).
+
+#### Permissions
+TBD
+
+
+### Helm Chart - nvidia-device-plugin
+#### Toggle
+- `nvidia_device_plugin` to install the `nvidia-device-plugin` helm chart
+
+#### Description
+Uses the [terraform-helm-release](https://github.com/terraform-module/terraform-helm-release) module to install the `https://nvidia.github.io/k8s-device-plugin/nvidia-device-plugin` helm chart into the `nvidia-device-plugin` namespace.
+
+Values passed to the helm chart can be overridden by passing a custom values file via the `nvidia_device_plugin_values` variable as demonstrated in the [complete example](examples/complete/main.tf).
+
+#### Permissions
+Not required
+
+
+### Comprehensive Required Permissions
+TBD
+
+
+## DataRobot versions
+| Release | Supported DR Versions |
+|---------|-----------------------|
+| >= 1.0 | >= 10.0 |
+
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -68,7 +239,6 @@ terraform destroy
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.5 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.6.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 2.15.0 |
-| <a name="requirement_kubectl"></a> [kubectl](#requirement\_kubectl) | >= 1.14.0 |
 
 ## Providers
 
@@ -174,6 +344,7 @@ terraform destroy
 | Name | Description |
 |------|-------------|
 | <a name="output_artifact_registry_repo_id"></a> [artifact\_registry\_repo\_id](#output\_artifact\_registry\_repo\_id) | ID of the Artifact Registry repository |
+| <a name="output_artifact_registry_repo_path"></a> [artifact\_registry\_repo\_path](#output\_artifact\_registry\_repo\_path) | Path to the Artifact Registry repository |
 | <a name="output_datarobot_service_account_email"></a> [datarobot\_service\_account\_email](#output\_datarobot\_service\_account\_email) | Email of the DataRobot service account |
 | <a name="output_datarobot_service_account_key"></a> [datarobot\_service\_account\_key](#output\_datarobot\_service\_account\_key) | DataRobot service account key |
 | <a name="output_gke_cluster_name"></a> [gke\_cluster\_name](#output\_gke\_cluster\_name) | Name of the GKE cluster |

@@ -17,7 +17,7 @@ locals {
   vpc_self_link = try(data.google_compute_network.existing[0].self_link, module.network[0].network_self_link, null)
 
   default_kubernetes_nodes_subnet_name = "${var.name}-vpc-snet"
-  kubernetes_nodes_subnet_name         = var.create_network && var.existing_vpc_name == null ? module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"] : var.existing_kubernetes_nodes_subnet_name
+  kubernetes_nodes_subnet_name         = var.create_network && var.existing_vpc_name == null ? module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].name : var.existing_kubernetes_nodes_subnet_name
 
   default_kubernetes_pods_range_name = "kubernetes-pods"
   kubernetes_pods_range_name         = var.create_network && var.existing_vpc_name == null ? local.default_kubernetes_pods_range_name : var.existing_kubernetes_pods_range_name
@@ -74,7 +74,7 @@ module "cloud_router" {
       {
         name                     = module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].id
         source_ip_ranges_to_nat  = ["PRIMARY_IP_RANGE", "LIST_OF_SECONDARY_IP_RANGES"]
-        secondary_ip_range_names = module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].secondary_ip_range[local.default_kubernetes_pods_range_name].range_name
+        secondary_ip_range_names = [module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].secondary_ip_range[0].range_name]
       }
     ]
   }]
@@ -102,7 +102,7 @@ module "public_dns" {
   count   = local.create_public_dns_zone ? 1 : 0
 
   project_id    = var.google_project_id
-  type          = var.internet_facing_ingress_lb ? "public" : "private"
+  type          = "public"
   name          = "${var.name}-dns-public"
   domain        = "${var.domain_name}."
   force_destroy = var.dns_zones_force_destroy
@@ -116,7 +116,7 @@ module "private_dns" {
   count   = local.create_private_dns_zone ? 1 : 0
 
   project_id                         = var.google_project_id
-  type                               = var.internet_facing_ingress_lb ? "public" : "private"
+  type                               = "private"
   name                               = "${var.name}-dns-private"
   domain                             = "${var.domain_name}."
   private_visibility_config_networks = [local.vpc_self_link]
@@ -287,13 +287,6 @@ provider "helm" {
     token                  = data.google_client_config.default.access_token
     cluster_ca_certificate = base64decode(try(module.kubernetes[0].ca_certificate, ""))
   }
-}
-
-provider "kubectl" {
-  host                   = try("https://${module.kubernetes[0].endpoint}", "")
-  token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(try(module.kubernetes[0].ca_certificate, ""))
-  load_config_file       = false
 }
 
 

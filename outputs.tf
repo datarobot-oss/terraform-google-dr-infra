@@ -41,6 +41,10 @@ output "artifact_registry_repo_id" {
   value       = try(google_artifact_registry_repository.this[0].id, null)
 }
 
+output "artifact_registry_repo_path" {
+  description = "Path to the Artifact Registry repository"
+  value       = try("${var.google_project_id}/${google_artifact_registry_repository.this[0].name}", null)
+}
 
 ################################################################################
 # Kubernetes

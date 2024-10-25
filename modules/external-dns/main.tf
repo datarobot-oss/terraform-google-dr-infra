@@ -9,13 +9,14 @@ module "external_dns_wid" {
   use_existing_k8s_sa = true
   k8s_sa_name         = "external-dns"
   annotate_k8s_sa     = false
+  roles               = ["roles/dns.reader"]
 }
 
 resource "google_dns_managed_zone_iam_member" "external_dns" {
   project      = var.google_project_id
   managed_zone = var.dns_zone_name
   role         = "roles/dns.admin"
-  member       = module.external_dns_wid.gcp_service_account_email
+  member       = "serviceAccount:${module.external_dns_wid.gcp_service_account_email}"
 }
 
 module "external_dns" {

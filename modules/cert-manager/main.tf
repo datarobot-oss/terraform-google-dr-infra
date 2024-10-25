@@ -9,13 +9,14 @@ module "cert_manager_wid" {
   use_existing_k8s_sa = true
   k8s_sa_name         = "cert-manager"
   annotate_k8s_sa     = false
+  roles               = ["roles/dns.reader"]
 }
 
 resource "google_dns_managed_zone_iam_member" "cert_manager" {
   project      = var.google_project_id
   managed_zone = var.dns_zone_name
   role         = "roles/dns.admin"
-  member       = module.cert_manager_wid.gcp_service_account_email
+  member       = "serviceAccount:${module.cert_manager_wid.gcp_service_account_email}"
 }
 
 module "cert_manager" {
@@ -46,24 +47,58 @@ module "cert_manager" {
   depends_on = [google_dns_managed_zone_iam_member.cert_manager]
 }
 
-resource "kubectl_manifest" "letsencrypt_staging_clusterissuer" {
-  count = var.letsencrypt_clusterissuers ? 1 : 0
+module "letsencrypt_clusterissuers" {
+  source  = "terraform-module/release/helm"
+  version = "~> 2.0"
+  count   = var.letsencrypt_clusterissuers ? 1 : 0
 
-  yaml_body = templatefile("${path.module}/letsencrypt_staging.tftpl", {
-    email     = var.email_address,
-    projectId = var.google_project_id
-  })
+  namespace  = "cert-manager"
+  repository = "https://dysnix.github.io/charts"
 
-  depends_on = [module.cert_manager]
-}
-
-resource "kubectl_manifest" "letsencrypt_prod_clusterissuer" {
-  count = var.letsencrypt_clusterissuers ? 1 : 0
-
-  yaml_body = templatefile("${path.module}/letsencrypt_prod.tftpl", {
-    email     = var.email_address
-    projectId = var.google_project_id
-  })
+  app = {
+    name             = "letsencrypt-clusterissuers"
+    version          = "0.3.2"
+    chart            = "raw"
+    create_namespace = true
+    wait             = true
+    recreate_pods    = false
+    deploy           = 1
+    timeout          = 600
+  }
+  values = [
+    <<-EOF
+    resources:
+      - apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt-staging
+        spec:
+          acme:
+            server: https://acme-staging-v02.api.letsencrypt.org/directory
+            email: ${var.email_address}
+            privateKeySecretRef:
+              name: letsencrypt-staging
+            solvers:
+              - dns01:
+                  cloudDNS:
+                    project: ${var.google_project_id}
+      - |
+          apiVersion: cert-manager.io/v1
+          kind: ClusterIssuer
+          metadata:
+            name: letsencrypt-prod
+          spec:
+            acme:
+              server: https://acme-v02.api.letsencrypt.org/directory
+              email: ${var.email_address}
+              privateKeySecretRef:
+                name: letsencrypt-prod
+              solvers:
+                - dns01:
+                    cloudDNS:
+                      project: ${var.google_project_id}
+    EOF
+  ]
 
   depends_on = [module.cert_manager]
 }

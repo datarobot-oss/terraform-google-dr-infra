@@ -5,9 +5,5 @@ terraform {
       source  = "hashicorp/google"
       version = ">= 6.6.0"
     }
-    kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = ">= 1.14.0"
-    }
   }
 }

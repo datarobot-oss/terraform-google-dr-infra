@@ -4,8 +4,8 @@ output "artifact_registry_host" {
 }
 
 output "artifact_registry_repo" {
-  description = "Path the the artifact registry repository"
-  value       = module.datarobot_infra.artifact_registry_repo_id
+  description = "Path to the artifact registry repository"
+  value       = module.datarobot_infra.artifact_registry_repo_path
 }
 
 output "storage_bucket_name" {

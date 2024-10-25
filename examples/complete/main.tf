@@ -110,7 +110,7 @@ module "datarobot_infra" {
   # https://developer.hashicorp.com/terraform/language/functions/templatefile
   ingress_nginx_values = "${path.module}/templates/custom_ingress_nginx_values.tftpl"
   ingress_nginx_variables = {
-    lb_source_ranges = [local.provisioner_public_ip]
+    lb_source_ranges = ["${local.provisioner_public_ip}/32"]
   }
 
   ################################################################################
