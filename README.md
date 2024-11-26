@@ -125,6 +125,7 @@ TBD
 ### Kubernetes
 #### Toggle
 - `create_kubernetes_cluster` to create a new Google Kubernetes Engine Cluster
+- `existing_gke_cluster_name` to use an existing GKE cluster
 
 #### Description
 Create a new GKE cluster to host the DataRobot application and any other helm charts installed by this module.
@@ -272,6 +273,7 @@ TBD
 | [google_storage_bucket_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam_member) | resource |
 | [google_client_config.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config) | data source |
 | [google_compute_network.existing](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_container_cluster.existing](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/container_cluster) | data source |
 
 ## Inputs
 
@@ -294,6 +296,7 @@ TBD
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Name of the domain to use for the DataRobot application. If create\_dns\_zones is true then zones will be created for this domain. It is also used by the cert-manager helm chart for DNS validation and as a domain filter by the external-dns helm chart. | `string` | `""` | no |
 | <a name="input_existing_artifact_registry_repo_id"></a> [existing\_artifact\_registry\_repo\_id](#input\_existing\_artifact\_registry\_repo\_id) | ID of existing artifact registry repository to use | `string` | `null` | no |
 | <a name="input_existing_gcs_bucket_name"></a> [existing\_gcs\_bucket\_name](#input\_existing\_gcs\_bucket\_name) | ID of existing Google Storage Bucket to use for DataRobot file storage. When specified, all other storage variables will be ignored. | `string` | `null` | no |
+| <a name="input_existing_gke_cluster_name"></a> [existing\_gke\_cluster\_name](#input\_existing\_gke\_cluster\_name) | Name of existing GKE cluster to use. When specified, all other kubernetes variables will be ignored. | `string` | `null` | no |
 | <a name="input_existing_kubernetes_nodes_subnet_name"></a> [existing\_kubernetes\_nodes\_subnet\_name](#input\_existing\_kubernetes\_nodes\_subnet\_name) | Name of an existing subnet to use for the GKE node pools and control plane private endpoint. Required when an existing\_vpc\_name is specified. Ignored if no existing\_vpc\_name is specified. | `string` | `null` | no |
 | <a name="input_existing_kubernetes_pods_range_name"></a> [existing\_kubernetes\_pods\_range\_name](#input\_existing\_kubernetes\_pods\_range\_name) | Name of an secondary IP range within subnet defined by existing\_kubernetes\_nodes\_subnet\_name to use for the Kubernetes pods. Required when an existing\_vpc\_name is specified. Ignored if no existing\_vpc\_name is specified. | `string` | `null` | no |
 | <a name="input_existing_kubernetes_services_range_name"></a> [existing\_kubernetes\_services\_range\_name](#input\_existing\_kubernetes\_services\_range\_name) | Name of an secondary IP range within subnet defined by existing\_kubernetes\_nodes\_subnet\_name to use for the Kubernetes services. Required when an existing\_vpc\_name is specified. Ignored if no existing\_vpc\_name is specified. | `string` | `null` | no |

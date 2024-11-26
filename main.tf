@@ -178,10 +178,24 @@ resource "google_artifact_registry_repository" "this" {
 # Kubernetes
 ################################################################################
 
+data "google_container_cluster" "existing" {
+  count = var.existing_gke_cluster_name != null ? 1 : 0
+
+  project  = var.google_project_id
+  location = var.region
+  name     = var.existing_gke_cluster_name
+}
+
+locals {
+  gke_cluster_name           = try(data.google_container_cluster.existing[0].name, module.kubernetes[0].name, null)
+  gke_cluster_ca_certificate = try(data.google_container_cluster.existing[0].master_auth[0].cluster_ca_certificate, module.kubernetes[0].ca_certificate, null)
+  gke_cluster_endpoint       = try(data.google_container_cluster.existing[0].endpoint, module.kubernetes[0].endpoint, null)
+}
+
 module "kubernetes" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
   version = "~> 33.0"
-  count   = var.create_kubernetes_cluster ? 1 : 0
+  count   = var.existing_gke_cluster_name == null && var.create_kubernetes_cluster ? 1 : 0
 
   project_id = var.google_project_id
   region     = var.region
@@ -270,7 +284,7 @@ resource "google_artifact_registry_repository_iam_member" "datarobot" {
 }
 
 resource "google_service_account_iam_member" "datarobot" {
-  for_each = var.datarobot_service_accounts
+  for_each = var.create_app_identity ? var.datarobot_service_accounts : []
 
   service_account_id = module.app_identity[0].service_account.name
   role               = "roles/iam.workloadIdentityUser"
@@ -284,9 +298,9 @@ resource "google_service_account_iam_member" "datarobot" {
 
 provider "helm" {
   kubernetes {
-    host                   = try("https://${module.kubernetes[0].endpoint}", "")
+    host                   = try("https://${local.gke_cluster_endpoint}", "")
     token                  = data.google_client_config.default.access_token
-    cluster_ca_certificate = base64decode(try(module.kubernetes[0].ca_certificate, ""))
+    cluster_ca_certificate = base64decode(try(local.gke_cluster_ca_certificate, ""))
   }
 }
 
@@ -294,20 +308,20 @@ provider "helm" {
 
 module "ingress_nginx" {
   source = "./modules/ingress-nginx"
-  count  = var.create_kubernetes_cluster && var.ingress_nginx ? 1 : 0
+  count  = var.ingress_nginx ? 1 : 0
 
   internet_facing_ingress_lb = var.internet_facing_ingress_lb
 
   custom_values_templatefile = var.ingress_nginx_values
   custom_values_variables    = var.ingress_nginx_variables
 
-  depends_on = [module.kubernetes]
+  depends_on = [local.gke_cluster_name]
 }
 
 
 module "cert_manager" {
   source = "./modules/cert-manager"
-  count  = var.create_kubernetes_cluster && var.cert_manager ? 1 : 0
+  count  = var.cert_manager ? 1 : 0
 
   google_project_id = var.google_project_id
 
@@ -319,35 +333,33 @@ module "cert_manager" {
   custom_values_templatefile = var.cert_manager_values
   custom_values_variables    = var.cert_manager_variables
 
-  depends_on = [module.kubernetes]
+  depends_on = [local.gke_cluster_name]
 }
 
 
 module "external_dns" {
   source = "./modules/external-dns"
-  count  = var.create_kubernetes_cluster && var.external_dns ? 1 : 0
+  count  = var.external_dns ? 1 : 0
 
   google_project_id = var.google_project_id
 
   name             = var.name
   domain_name      = var.domain_name
   dns_zone_name    = var.internet_facing_ingress_lb ? local.public_dns_zone_name : local.private_dns_zone_name
-  gke_cluster_name = module.kubernetes[0].name
+  gke_cluster_name = local.gke_cluster_name
   zone_visibility  = var.internet_facing_ingress_lb ? "public" : "private"
 
   custom_values_templatefile = var.external_dns_values
   custom_values_variables    = var.external_dns_variables
-
-  depends_on = [module.kubernetes]
 }
 
 
 module "nvidia_device_plugin" {
   source = "./modules/nvidia-device-plugin"
-  count  = var.create_kubernetes_cluster && var.nvidia_device_plugin ? 1 : 0
+  count  = var.nvidia_device_plugin ? 1 : 0
 
   custom_values_templatefile = var.nvidia_device_plugin_values
   custom_values_variables    = var.nvidia_device_plugin_variables
 
-  depends_on = [module.kubernetes]
+  depends_on = [local.gke_cluster_name]
 }

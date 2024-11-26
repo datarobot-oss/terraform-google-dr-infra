@@ -155,6 +155,12 @@ variable "create_container_registry" {
 # Kubernetes
 ################################################################################
 
+variable "existing_gke_cluster_name" {
+  description = "Name of existing GKE cluster to use. When specified, all other kubernetes variables will be ignored."
+  type        = string
+  default     = null
+}
+
 variable "create_kubernetes_cluster" {
   description = "Create a new Google Kubernetes Engine cluster. All kubernetes and helm chart variables are ignored if this variable is false."
   type        = bool
