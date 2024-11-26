@@ -188,6 +188,7 @@ module "kubernetes" {
 
   name                          = "${var.name}-gke"
   deletion_protection           = var.kubernetes_cluster_deletion_protection
+  grant_registry_access         = var.kubernetes_cluster_grant_registry_access
   kubernetes_version            = var.kubernetes_cluster_version
   release_channel               = var.release_channel
   datapath_provider             = "ADVANCED_DATAPATH"

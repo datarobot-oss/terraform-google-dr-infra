@@ -179,6 +179,12 @@ variable "kubernetes_cluster_deletion_protection" {
   default     = true
 }
 
+variable "kubernetes_cluster_grant_registry_access" {
+  description = "Grants created cluster-specific service account storage.objectViewer and artifactregistry.reader roles"
+  type        = bool
+  default     = true
+}
+
 variable "kubernetes_cluster_endpoint_public_access" {
   description = "Whether the Kubernetes cluster API endpoint can be accessed via an external IP address"
   type        = bool
