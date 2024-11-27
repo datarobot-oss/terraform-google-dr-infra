@@ -5,7 +5,7 @@ module "external_dns_wid" {
   project_id = var.google_project_id
 
   name                = "${var.name}-external-dns"
-  namespace           = "external-dns"
+  namespace           = var.namespace
   use_existing_k8s_sa = true
   k8s_sa_name         = "external-dns"
   annotate_k8s_sa     = false
@@ -23,12 +23,12 @@ module "external_dns" {
   source  = "terraform-module/release/helm"
   version = "~> 2.0"
 
-  namespace  = "external-dns"
+  namespace  = var.namespace
   repository = "https://charts.bitnami.com/bitnami"
 
   app = {
     name             = "external-dns"
-    version          = "8.3.5"
+    version          = "8.5.1"
     chart            = "external-dns"
     create_namespace = true
     wait             = true

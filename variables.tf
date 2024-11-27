@@ -354,6 +354,12 @@ variable "ingress_nginx" {
   default     = true
 }
 
+variable "ingress_nginx_namespace" {
+  description = "Namespace to install the helm chart into"
+  type        = string
+  default     = "ingress-nginx"
+}
+
 variable "ingress_nginx_values" {
   description = "Path to templatefile containing custom values for the ingress-nginx helm chart"
   type        = string
@@ -370,6 +376,12 @@ variable "cert_manager" {
   description = "Install the cert-manager helm chart. All other cert_manager variables are ignored if this variable is false."
   type        = bool
   default     = true
+}
+
+variable "cert_manager_namespace" {
+  description = "Namespace to install the helm chart into"
+  type        = string
+  default     = "cert-manager"
 }
 
 variable "cert_manager_letsencrypt_clusterissuers" {
@@ -402,6 +414,12 @@ variable "external_dns" {
   default     = true
 }
 
+variable "external_dns_namespace" {
+  description = "Namespace to install the helm chart into"
+  type        = string
+  default     = "external-dns"
+}
+
 variable "external_dns_values" {
   description = "Path to templatefile containing custom values for the external-dns helm chart"
   type        = string
@@ -420,6 +438,12 @@ variable "nvidia_device_plugin" {
   default     = true
 }
 
+variable "nvidia_device_plugin_namespace" {
+  description = "Namespace to install the helm chart into"
+  type        = string
+  default     = "nvidia-device-plugin"
+}
+
 variable "nvidia_device_plugin_values" {
   description = "Path to templatefile containing custom values for the nvidia-device-plugin helm chart"
   type        = string
@@ -428,6 +452,30 @@ variable "nvidia_device_plugin_values" {
 
 variable "nvidia_device_plugin_variables" {
   description = "Variables passed to the nvidia_device_plugin_values templatefile"
+  type        = any
+  default     = {}
+}
+
+variable "descheduler" {
+  description = "Install the descheduler helm chart to enable rescheduling of pods. All other descheduler variables are ignored if this variable is false"
+  type        = bool
+  default     = true
+}
+
+variable "descheduler_namespace" {
+  description = "Namespace to install the helm chart into"
+  type        = string
+  default     = "kube-system"
+}
+
+variable "descheduler_values" {
+  description = "Path to templatefile containing custom values for the descheduler helm chart"
+  type        = string
+  default     = ""
+}
+
+variable "descheduler_variables" {
+  description = "Variables passed to the descheduler templatefile"
   type        = any
   default     = {}
 }

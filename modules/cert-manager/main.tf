@@ -5,7 +5,7 @@ module "cert_manager_wid" {
   project_id = var.google_project_id
 
   name                = "${var.name}-cert-manager"
-  namespace           = "cert-manager"
+  namespace           = var.namespace
   use_existing_k8s_sa = true
   k8s_sa_name         = "cert-manager"
   annotate_k8s_sa     = false
@@ -23,12 +23,12 @@ module "cert_manager" {
   source  = "terraform-module/release/helm"
   version = "~> 2.0"
 
-  namespace  = "cert-manager"
+  namespace  = var.namespace
   repository = "https://charts.jetstack.io"
 
   app = {
     name             = "cert-manager"
-    version          = "1.15.2"
+    version          = "1.16.1"
     chart            = "cert-manager"
     create_namespace = true
     wait             = true

@@ -60,16 +60,19 @@ module "datarobot_infra" {
   kubernetes_master_ipv4_cidr_block         = "10.7.16.0/28"
   kubernetes_primary_nodepool_name          = "primary"
   kubernetes_primary_nodepool_vm_size       = "e2-standard-32"
-  kubernetes_primary_nodepool_node_count    = 3
-  kubernetes_primary_nodepool_min_count     = 3
+  kubernetes_primary_nodepool_node_count    = 1
+  kubernetes_primary_nodepool_min_count     = 1
   kubernetes_primary_nodepool_max_count     = 10
-  kubernetes_primary_nodepool_labels        = {}
-  kubernetes_primary_nodepool_taints        = []
-  kubernetes_gpu_nodepool_name              = "gpu"
-  kubernetes_gpu_nodepool_vm_size           = "n1-highmem-4"
-  kubernetes_gpu_nodepool_node_count        = 0
-  kubernetes_gpu_nodepool_min_count         = 0
-  kubernetes_gpu_nodepool_max_count         = 10
+  kubernetes_primary_nodepool_labels = {
+    "datarobot.com/node-capability" = "cpu"
+  }
+  kubernetes_primary_nodepool_taints = []
+
+  kubernetes_gpu_nodepool_name       = "gpu"
+  kubernetes_gpu_nodepool_vm_size    = "n1-highmem-4"
+  kubernetes_gpu_nodepool_node_count = 0
+  kubernetes_gpu_nodepool_min_count  = 0
+  kubernetes_gpu_nodepool_max_count  = 10
   kubernetes_gpu_nodepool_labels = {
     "datarobot.com/node-capability" = "gpu"
   }
@@ -103,6 +106,7 @@ module "datarobot_infra" {
   # ingress-nginx
   ################################################################################
   ingress_nginx              = true
+  ingress_nginx_namespace    = "ingress-nginx"
   internet_facing_ingress_lb = true
 
   # in this case our custom values file override is formatted as a templatefile
@@ -117,6 +121,7 @@ module "datarobot_infra" {
   # cert-manager
   ################################################################################
   cert_manager                            = true
+  cert_manager_namespace                  = "cert-manager"
   cert_manager_letsencrypt_clusterissuers = true
   cert_manager_letsencrypt_email_address  = "youremail@yourdomain.com"
   cert_manager_values                     = "${path.module}/templates/custom_cert_manager_values.yaml"
@@ -126,6 +131,7 @@ module "datarobot_infra" {
   # external-dns
   ################################################################################
   external_dns           = true
+  external_dns_namespace = "external-dns"
   external_dns_values    = "${path.module}/templates/custom_external_dns_values.yaml"
   external_dns_variables = {}
 
@@ -133,6 +139,15 @@ module "datarobot_infra" {
   # nvidia-device-plugin
   ################################################################################
   nvidia_device_plugin           = true
+  nvidia_device_plugin_namespace = "nvidia-device-plugin"
   nvidia_device_plugin_values    = "${path.module}/templates/custom_nvidia_device_plugin_values.yaml"
   nvidia_device_plugin_variables = {}
+
+  ################################################################################
+  # descheduler
+  ################################################################################
+  descheduler           = true
+  descheduler_namespace = "kube-system"
+  descheduler_values    = "${path.module}/templates/custom_descheduler_values.yaml"
+  descheduler_variables = {}
 }

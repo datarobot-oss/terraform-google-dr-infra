@@ -327,6 +327,7 @@ module "ingress_nginx" {
 
   internet_facing_ingress_lb = var.internet_facing_ingress_lb
 
+  namespace                  = var.ingress_nginx_namespace
   custom_values_templatefile = var.ingress_nginx_values
   custom_values_variables    = var.ingress_nginx_variables
 
@@ -345,6 +346,7 @@ module "cert_manager" {
   letsencrypt_clusterissuers = var.cert_manager_letsencrypt_clusterissuers
   email_address              = var.cert_manager_letsencrypt_email_address
 
+  namespace                  = var.cert_manager_namespace
   custom_values_templatefile = var.cert_manager_values
   custom_values_variables    = var.cert_manager_variables
 
@@ -364,6 +366,7 @@ module "external_dns" {
   gke_cluster_name = local.gke_cluster_name
   zone_visibility  = var.internet_facing_ingress_lb ? "public" : "private"
 
+  namespace                  = var.external_dns_namespace
   custom_values_templatefile = var.external_dns_values
   custom_values_variables    = var.external_dns_variables
 }
@@ -373,8 +376,20 @@ module "nvidia_device_plugin" {
   source = "./modules/nvidia-device-plugin"
   count  = var.nvidia_device_plugin ? 1 : 0
 
+  namespace                  = var.nvidia_device_plugin_namespace
   custom_values_templatefile = var.nvidia_device_plugin_values
   custom_values_variables    = var.nvidia_device_plugin_variables
+
+  depends_on = [local.gke_cluster_name]
+}
+
+module "descheduler" {
+  source = "./modules/descheduler"
+  count  = var.descheduler ? 1 : 0
+
+  namespace                  = var.descheduler_namespace
+  custom_values_templatefile = var.descheduler_values
+  custom_values_variables    = var.descheduler_variables
 
   depends_on = [local.gke_cluster_name]
 }
