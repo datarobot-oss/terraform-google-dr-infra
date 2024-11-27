@@ -175,7 +175,7 @@ variable "kubernetes_cluster_version" {
 
 variable "release_channel" {
   type        = string
-  description = "The release channel of this cluster. Accepted values are `UNSPECIFIED`, `RAPID`, `REGULAR` and `STABLE`. Defaults to `REGULAR`."
+  description = "The release channel of this cluster. Accepted values are `UNSPECIFIED`, `RAPID`, `REGULAR` and `STABLE`. Defaults to `STABLE`."
   default     = "STABLE"
 }
 
@@ -224,13 +224,13 @@ variable "kubernetes_primary_nodepool_vm_size" {
 variable "kubernetes_primary_nodepool_node_count" {
   description = "Node count of the primary node pool"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "kubernetes_primary_nodepool_min_count" {
   description = "Minimum number of nodes in the primary node pool"
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "kubernetes_primary_nodepool_max_count" {
@@ -242,7 +242,9 @@ variable "kubernetes_primary_nodepool_max_count" {
 variable "kubernetes_primary_nodepool_labels" {
   description = "A map of Kubernetes labels to apply to the primary node pool"
   type        = map(string)
-  default     = {}
+  default = {
+    "datarobot.com/node-capability" = "cpu"
+  }
 }
 
 variable "kubernetes_primary_nodepool_taints" {
@@ -295,7 +297,7 @@ variable "kubernetes_gpu_nodegroup_taints" {
   default = [
     {
       key    = "nvidia.com/gpu"
-      value  = ""
+      value  = "true"
       effect = "NO_SCHEDULE"
     }
   ]

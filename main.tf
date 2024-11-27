@@ -219,6 +219,21 @@ module "kubernetes" {
     display_name = ip
   }]
 
+  remove_default_node_pool = true
+
+  # all values are ignored except for autoscaling_profile
+  cluster_autoscaling = {
+    enabled             = false ## disable node auto-provisioning
+    autoscaling_profile = "OPTIMIZE_UTILIZATION"
+    max_cpu_cores       = 0
+    min_cpu_cores       = 0
+    max_memory_gb       = 0
+    min_memory_gb       = 0
+    gpu_resources       = []
+    auto_repair         = true
+    auto_upgrade        = true
+  }
+
   node_pools = [
     {
       name         = var.kubernetes_primary_nodepool_name
