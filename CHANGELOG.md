@@ -3,6 +3,13 @@
 All notable changes are documented in this file.
 
 
+## v1.1.3
+
+### Updated
+
+- README for DataRobot version description
+
+
 ## v1.1.2
 
 ### Updated

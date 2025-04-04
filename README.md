@@ -243,10 +243,7 @@ TBD
 ## DataRobot versions
 Currently the only thing coupling a release of this module to a DataRobot Enterprise Release is the default list of datarobot_service_accounts. Technically, this module can be used with any DataRobot version if the user specifies the correct list of datarobot_service_accounts for that version.
 
-| Release | Supported DR Versions |
-|---------|-----------------------|
-| 1.0 - 1.1.1 | ~= 10.0 |
-| >= 1.1.2 | ~= 11.0|
+The default installation supports DataRobot versions >= 10.0.
 
 
 <!-- BEGIN_TF_DOCS -->
