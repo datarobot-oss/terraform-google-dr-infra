@@ -3,6 +3,13 @@
 All notable changes are documented in this file.
 
 
+## v1.1.2
+
+### Updated
+
+- update datarobot_service_accounts defaults for 11.0
+
+
 ## v1.1.1
 
 ### Updated

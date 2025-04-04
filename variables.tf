@@ -321,19 +321,21 @@ variable "datarobot_namespace" {
 }
 
 variable "datarobot_service_accounts" {
-  description = "Names of the Kubernetes service accounts used by the DataRobot application"
+  description = "Kubernetes service accounts in the datarobot_namespace to provide with Storage Blob Data Contributor and AcrPush access"
   type        = set(string)
   default = [
-    "dr",
-    "build-service",
-    "build-service-image-builder",
-    "buzok-account",
-    "dr-lrs-operator",
+    "datarobot-storage-sa",
     "dynamic-worker",
-    "internal-api-sa",
-    "nbx-notebook-revisions-account",
     "prediction-server-sa",
+    "internal-api-sa",
+    "build-service",
     "tileservergl-sa",
+    "nbx-notebook-revisions-account",
+    "buzok-account",
+    "exec-manager-qw",
+    "exec-manager-wrangling",
+    "lrs-job-manager",
+    "blob-view-service",
   ]
 }
 
