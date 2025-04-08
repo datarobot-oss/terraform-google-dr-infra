@@ -3,6 +3,12 @@
 All notable changes are documented in this file.
 
 
+## v1.1.4
+
+### Updated
+- use helm_release instead of terraform-module/release/helm
+
+
 ## v1.1.3
 
 ### Updated

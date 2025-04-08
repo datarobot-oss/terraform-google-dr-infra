@@ -19,23 +19,14 @@ resource "google_dns_managed_zone_iam_member" "external_dns" {
   member       = "serviceAccount:${module.external_dns_wid.gcp_service_account_email}"
 }
 
-module "external_dns" {
-  source  = "terraform-module/release/helm"
-  version = "~> 2.0"
-
+resource "helm_release" "external_dns" {
+  name       = "external-dns"
   namespace  = var.namespace
   repository = "https://charts.bitnami.com/bitnami"
+  chart      = "external-dns"
+  version    = "8.5.1"
 
-  app = {
-    name             = "external-dns"
-    version          = "8.5.1"
-    chart            = "external-dns"
-    create_namespace = true
-    wait             = true
-    recreate_pods    = false
-    deploy           = 1
-    timeout          = 600
-  }
+  create_namespace = true
 
   values = [
     templatefile("${path.module}/values.tftpl", {
