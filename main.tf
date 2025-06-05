@@ -323,7 +323,7 @@ provider "helm" {
 
 module "ingress_nginx" {
   source = "./modules/ingress-nginx"
-  count  = var.ingress_nginx ? 1 : 0
+  count  = var.install_helm_charts && var.ingress_nginx ? 1 : 0
 
   internet_facing_ingress_lb = var.internet_facing_ingress_lb
 
@@ -337,7 +337,7 @@ module "ingress_nginx" {
 
 module "cert_manager" {
   source = "./modules/cert-manager"
-  count  = var.cert_manager ? 1 : 0
+  count  = var.install_helm_charts && var.cert_manager ? 1 : 0
 
   google_project_id = var.google_project_id
 
@@ -356,7 +356,7 @@ module "cert_manager" {
 
 module "external_dns" {
   source = "./modules/external-dns"
-  count  = var.external_dns ? 1 : 0
+  count  = var.install_helm_charts && var.external_dns ? 1 : 0
 
   google_project_id = var.google_project_id
 
@@ -374,7 +374,7 @@ module "external_dns" {
 
 module "nvidia_device_plugin" {
   source = "./modules/nvidia-device-plugin"
-  count  = var.nvidia_device_plugin ? 1 : 0
+  count  = var.install_helm_charts && var.nvidia_device_plugin ? 1 : 0
 
   namespace                  = var.nvidia_device_plugin_namespace
   custom_values_templatefile = var.nvidia_device_plugin_values
@@ -385,7 +385,7 @@ module "nvidia_device_plugin" {
 
 module "descheduler" {
   source = "./modules/descheduler"
-  count  = var.descheduler ? 1 : 0
+  count  = var.install_helm_charts && var.descheduler ? 1 : 0
 
   namespace                  = var.descheduler_namespace
   custom_values_templatefile = var.descheduler_values

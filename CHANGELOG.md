@@ -3,6 +3,12 @@
 All notable changes are documented in this file.
 
 
+## v1.1.5
+
+### Added
+- `install_helm_charts` variable to be able to enable/disable installation of all helm charts
+
+
 ## v1.1.4
 
 ### Updated

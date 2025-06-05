@@ -344,6 +344,12 @@ variable "datarobot_service_accounts" {
 # Helm Charts
 ################################################################################
 
+variable "install_helm_charts" {
+  description = "Whether to install helm charts into the target EKS cluster. All other helm chart variables are ignored if this is `false`."
+  type        = bool
+  default     = true
+}
+
 variable "internet_facing_ingress_lb" {
   description = "Determines the type of Load Balancer created for GKE ingress. If true, an external Load Balancer will be created. If false, an internal Load Balancer will be created."
   type        = bool
