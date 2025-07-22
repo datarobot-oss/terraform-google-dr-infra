@@ -312,7 +312,7 @@ resource "google_service_account_iam_member" "datarobot" {
 ################################################################################
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = try("https://${local.gke_cluster_endpoint}", "")
     token                  = data.google_client_config.default.access_token
     cluster_ca_certificate = base64decode(try(local.gke_cluster_ca_certificate, ""))
