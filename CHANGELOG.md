@@ -3,6 +3,12 @@
 All notable changes are documented in this file.
 
 
+## v1.1.7
+
+### Added
+- `kubeworker-sa` to `datarobot_service_accounts` default value
+
+
 ## v1.1.6
 
 ### Updated
