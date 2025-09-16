@@ -342,6 +342,59 @@ variable "datarobot_service_accounts" {
 
 
 ################################################################################
+# PostgreSQL
+################################################################################
+
+variable "create_postgres" {
+  description = "Whether to create a CloudSQL for PostgreSQL instance"
+  type        = bool
+  default     = false
+}
+
+variable "postgres_database_version" {
+  description = "The PostgreSQL version to use"
+  type        = string
+  default     = "POSTGRES_13"
+}
+
+variable "postgres_availability_type" {
+  description = "The availability type of the Cloud SQL instance, high availability (REGIONAL) or single zone (ZONAL)"
+  type        = string
+  default     = "ZONAL"
+}
+
+variable "postgres_tier" {
+  description = "The machine type to use. See tiers for more details and supported versions. Postgres supports only shared-core machine types, and custom machine types such as db-custom-2-13312."
+  type        = string
+  default     = "db-custom-4-16384"
+}
+
+variable "postgres_disk_type" {
+  description = "The type of data disk: PD_SSD, PD_HDD, or HYPERDISK_BALANCED"
+  type        = string
+  default     = "PD_SSD"
+}
+
+variable "postgres_disk_size" {
+  description = "The size of data disk, in GB. Size of a running instance cannot be reduced but can be increased"
+  type        = number
+  default     = 20
+}
+
+variable "postgres_disk_autoresize_limit" {
+  description = "The maximum size to which storage capacity can be automatically increased. The default value is 0, which specifies that there is no limit."
+  type        = number
+  default     = 0
+}
+
+variable "postgres_deletion_protection" {
+  description = "Whether Terraform will be prevented from destroying the instance. When the field is set to true or unset in Terraform state, a terraform apply or terraform destroy that would delete the instance will fail. When the field is set to false, deleting the instance is allowed"
+  type        = bool
+  default     = false
+}
+
+
+################################################################################
 # Helm Charts
 ################################################################################
 

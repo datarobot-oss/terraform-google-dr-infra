@@ -70,3 +70,19 @@ output "datarobot_service_account_key" {
   sensitive   = false
   value       = try(module.app_identity[0].key, null)
 }
+
+
+################################################################################
+# PostgreSQL
+################################################################################
+
+output "postgres_endpoint" {
+  description = "PostgreSQL endpoint"
+  value       = try(module.postgres[0].private_ip_address, null)
+}
+
+output "postgres_password" {
+  description = "PostgreSQL admin password"
+  value       = try(module.postgres[0].generated_user_password, null)
+  sensitive   = true
+}

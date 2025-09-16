@@ -3,6 +3,13 @@
 All notable changes are documented in this file.
 
 
+
+## v1.2.0
+
+### Added
+- `postgres` module to create a CloudSQL for PostgreSQL instance
+
+
 ## v1.1.7
 
 ### Added

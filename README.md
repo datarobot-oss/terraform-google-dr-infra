@@ -20,6 +20,7 @@ module "datarobot_infra" {
   existing_artifact_registry_repo_id = "projects/your-google-project-id/locations/us-west1/repositories/existing-repository-name"
   create_kubernetes_cluster          = true
   create_app_identity                = true
+  create_postgres                    = true
 
   ingress_nginx                           = true
   internet_facing_ingress_lb              = true
@@ -153,6 +154,17 @@ TBD
 Create a new GKE Service Account with `roles/storage.admin` access to the Google Cloud Storage bucket and `roles/artifactregistry.writer` access to the Google Artifact Registry Repository.
 
 Workload identities are created for each `datarobot_service_accounts` within the `datarobot_namespace` and attached to this Service Account. This allows those pods running with those service accounts to access file storage and the artifact registry.
+
+#### Permissions
+TBD
+
+
+### Postgres
+#### Toggle
+- `create_postgres` to create a new Cloud SQL for PostgreSQL instance
+
+#### Description
+Create an Cloud SQL for PostgreSQL deployed into a dedicated, delegated subnet and connected to via service networking.
 
 #### Permissions
 TBD

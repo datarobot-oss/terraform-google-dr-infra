@@ -103,6 +103,18 @@ module "datarobot_infra" {
   ]
 
   ################################################################################
+  # PostgreSQL
+  ################################################################################
+  create_postgres                = true
+  postgres_database_version      = "POSTGRES_13"
+  postgres_availability_type     = "ZONAL"
+  postgres_tier                  = "db-custom-4-16384"
+  postgres_disk_type             = "PD_SSD"
+  postgres_disk_size             = 20
+  postgres_disk_autoresize_limit = 0
+  postgres_deletion_protection   = false
+
+  ################################################################################
   # Helm Charts
   ################################################################################
   install_helm_charts = true

@@ -17,13 +17,13 @@ locals {
   vpc_self_link = try(data.google_compute_network.existing[0].self_link, module.network[0].network_self_link, null)
 
   default_kubernetes_nodes_subnet_name = "${var.name}-vpc-snet"
-  kubernetes_nodes_subnet_name         = var.create_network && var.existing_vpc_name == null ? module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].name : var.existing_kubernetes_nodes_subnet_name
+  kubernetes_nodes_subnet_name         = var.existing_vpc_name != null ? var.existing_kubernetes_nodes_subnet_name : try(module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].name, null)
 
   default_kubernetes_pods_range_name = "kubernetes-pods"
-  kubernetes_pods_range_name         = var.create_network && var.existing_vpc_name == null ? local.default_kubernetes_pods_range_name : var.existing_kubernetes_pods_range_name
+  kubernetes_pods_range_name         = var.existing_vpc_name != null ? var.existing_kubernetes_pods_range_name : local.default_kubernetes_pods_range_name
 
   default_kubernetes_services_range_name = "kubernetes-services"
-  kubernetes_services_range_name         = var.create_network && var.existing_vpc_name == null ? local.default_kubernetes_services_range_name : var.existing_kubernetes_services_range_name
+  kubernetes_services_range_name         = var.existing_vpc_name != null ? var.existing_kubernetes_services_range_name : local.default_kubernetes_services_range_name
 }
 
 module "network" {
@@ -131,7 +131,7 @@ module "private_dns" {
 ################################################################################
 
 locals {
-  storage_bucket_name = var.create_storage && var.existing_gcs_bucket_name == null ? module.storage[0].name : var.existing_gcs_bucket_name
+  storage_bucket_name = var.existing_gcs_bucket_name != null ? var.existing_gcs_bucket_name : try(module.storage[0].name, null)
 }
 
 module "storage" {
@@ -157,7 +157,7 @@ module "storage" {
 ################################################################################
 
 locals {
-  artifact_registry_repo = var.create_container_registry && var.existing_artifact_registry_repo_id == null ? google_artifact_registry_repository.this[0].id : var.existing_artifact_registry_repo_id
+  artifact_registry_repo = var.existing_artifact_registry_repo_id != null ? var.existing_artifact_registry_repo_id : try(google_artifact_registry_repository.this[0].id, null)
 }
 
 resource "google_artifact_registry_repository" "this" {
@@ -188,8 +188,8 @@ data "google_container_cluster" "existing" {
 
 locals {
   gke_cluster_name           = try(data.google_container_cluster.existing[0].name, module.kubernetes[0].name, null)
-  gke_cluster_ca_certificate = try(data.google_container_cluster.existing[0].master_auth[0].cluster_ca_certificate, module.kubernetes[0].ca_certificate, null)
-  gke_cluster_endpoint       = try(data.google_container_cluster.existing[0].endpoint, module.kubernetes[0].endpoint, null)
+  gke_cluster_ca_certificate = try(data.google_container_cluster.existing[0].master_auth[0].cluster_ca_certificate, module.kubernetes[0].ca_certificate, "")
+  gke_cluster_endpoint       = try(data.google_container_cluster.existing[0].endpoint, module.kubernetes[0].endpoint, "")
 }
 
 module "kubernetes" {
@@ -308,17 +308,86 @@ resource "google_service_account_iam_member" "datarobot" {
 
 
 ################################################################################
+# PostgreSQL
+################################################################################
+
+locals {
+  postgres_cidr = cidrsubnet(var.network_address_space, 8, 64)
+}
+
+resource "google_compute_global_address" "postgres" {
+  count = var.create_postgres ? 1 : 0
+
+  project       = var.google_project_id
+  name          = "${var.name}-postgres-address"
+  address_type  = "INTERNAL"
+  purpose       = "VPC_PEERING"
+  address       = split("/", local.postgres_cidr)[0]
+  prefix_length = split("/", local.postgres_cidr)[1]
+  network       = local.vpc_name
+}
+
+resource "google_service_networking_connection" "postgres" {
+  count = var.create_postgres ? 1 : 0
+
+  network = local.vpc_self_link
+  service = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [
+    google_compute_global_address.postgres[0].name
+  ]
+  deletion_policy         = "ABANDON"
+  update_on_creation_fail = true
+}
+
+module "postgres" {
+  source  = "terraform-google-modules/sql-db/google//modules/postgresql"
+  version = "~> 26.0"
+  count   = var.create_postgres ? 1 : 0
+
+  name              = "${var.name}-postgres"
+  project_id        = var.google_project_id
+  availability_type = var.postgres_availability_type
+  ip_configuration = {
+    private_network    = local.vpc_self_link
+    allocated_ip_range = google_compute_global_address.postgres[0].name
+    ssl_mode           = "ENCRYPTED_ONLY"
+  }
+
+  database_version      = var.postgres_database_version
+  tier                  = var.postgres_tier
+  disk_type             = var.postgres_disk_type
+  disk_size             = var.postgres_disk_size
+  disk_autoresize_limit = var.postgres_disk_autoresize_limit
+
+  enable_default_user = true
+  user_name           = "postgres"
+
+  maintenance_window_update_track = "stable"
+  deletion_protection             = var.postgres_deletion_protection
+  backup_configuration = {
+    enabled                        = true
+    point_in_time_recovery_enabled = true
+    retained_backups               = 365
+    retention_unit                 = "COUNT"
+  }
+
+  user_labels = var.tags
+
+  depends_on = [google_service_networking_connection.postgres[0]]
+}
+
+
+################################################################################
 # Helm Charts
 ################################################################################
 
 provider "helm" {
   kubernetes = {
-    host                   = try("https://${local.gke_cluster_endpoint}", "")
+    host                   = "https://${local.gke_cluster_endpoint}"
     token                  = data.google_client_config.default.access_token
-    cluster_ca_certificate = base64decode(try(local.gke_cluster_ca_certificate, ""))
+    cluster_ca_certificate = base64decode(local.gke_cluster_ca_certificate)
   }
 }
-
 
 
 module "ingress_nginx" {
