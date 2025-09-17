@@ -360,7 +360,7 @@ variable "postgres_database_version" {
 variable "postgres_availability_type" {
   description = "The availability type of the Cloud SQL instance, high availability (REGIONAL) or single zone (ZONAL)"
   type        = string
-  default     = "ZONAL"
+  default     = "REGIONAL"
 }
 
 variable "postgres_tier" {
@@ -391,6 +391,35 @@ variable "postgres_deletion_protection" {
   description = "Whether Terraform will be prevented from destroying the instance. When the field is set to true or unset in Terraform state, a terraform apply or terraform destroy that would delete the instance will fail. When the field is set to false, deleting the instance is allowed"
   type        = bool
   default     = false
+}
+
+
+################################################################################
+# Redis
+################################################################################
+
+variable "create_redis" {
+  description = "Whether to create a Google Memorystore Redis instance"
+  type        = bool
+  default     = false
+}
+
+variable "redis_tier" {
+  description = "The service tier of the instance: BASIC or STANDARD_HA"
+  type        = string
+  default     = "STANDARD_HA"
+}
+
+variable "redis_transit_encryption_mode" {
+  description = "The TLS mode of the Redis instance, If not provided, TLS is enabled for the instance. Possible values are: SERVER_AUTHENTICATION, DISABLED."
+  type        = string
+  default     = "SERVER_AUTHENTICATION"
+}
+
+variable "redis_memory_size_gb" {
+  description = "Redis memory size in GiB. Defaulted to 1 GiB"
+  type        = number
+  default     = 8
 }
 
 

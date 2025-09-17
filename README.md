@@ -21,6 +21,7 @@ module "datarobot_infra" {
   create_kubernetes_cluster          = true
   create_app_identity                = true
   create_postgres                    = true
+  create_redis                       = true
 
   ingress_nginx                           = true
   internet_facing_ingress_lb              = true
@@ -164,7 +165,18 @@ TBD
 - `create_postgres` to create a new Cloud SQL for PostgreSQL instance
 
 #### Description
-Create an Cloud SQL for PostgreSQL deployed into a dedicated, delegated subnet and connected to via service networking.
+Create an Cloud SQL for PostgreSQL connected to via service networking.
+
+#### Permissions
+TBD
+
+
+### Redis
+#### Toggle
+- `create_redis` to create a new Memorystore Redis instance
+
+#### Description
+Create a Memorystore Redis instance connected to via service networking.
 
 #### Permissions
 TBD

@@ -4,6 +4,12 @@ All notable changes are documented in this file.
 
 
 
+## v1.2.1
+
+### Added
+- `redis` module to create a Memorystore Redis instance
+
+
 ## v1.2.0
 
 ### Added

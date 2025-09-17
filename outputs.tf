@@ -86,3 +86,19 @@ output "postgres_password" {
   value       = try(module.postgres[0].generated_user_password, null)
   sensitive   = true
 }
+
+
+################################################################################
+# Redis
+################################################################################
+
+output "redis_endpoint" {
+  description = "Google Memorystore Redis endpoint"
+  value       = try(module.redis[0].host, null)
+}
+
+output "redis_password" {
+  description = "Google Memorystore Redis instance primary access key"
+  value       = try(module.redis[0].auth_string, null)
+  sensitive   = true
+}

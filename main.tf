@@ -327,18 +327,6 @@ resource "google_compute_global_address" "postgres" {
   network       = local.vpc_name
 }
 
-resource "google_service_networking_connection" "postgres" {
-  count = var.create_postgres ? 1 : 0
-
-  network = local.vpc_self_link
-  service = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [
-    google_compute_global_address.postgres[0].name
-  ]
-  deletion_policy         = "ABANDON"
-  update_on_creation_fail = true
-}
-
 module "postgres" {
   source  = "terraform-google-modules/sql-db/google//modules/postgresql"
   version = "~> 26.0"
@@ -373,7 +361,68 @@ module "postgres" {
 
   user_labels = var.tags
 
-  depends_on = [google_service_networking_connection.postgres[0]]
+  depends_on = [google_service_networking_connection.this[0]]
+}
+
+
+################################################################################
+# Redis
+################################################################################
+
+locals {
+  redis_cidr = cidrsubnet(var.network_address_space, 8, 65)
+}
+
+resource "google_compute_global_address" "redis" {
+  count = var.create_redis ? 1 : 0
+
+  project       = var.google_project_id
+  name          = "${var.name}-redis-address"
+  address_type  = "INTERNAL"
+  purpose       = "VPC_PEERING"
+  address       = split("/", local.redis_cidr)[0]
+  prefix_length = split("/", local.redis_cidr)[1]
+  network       = local.vpc_name
+}
+
+module "redis" {
+  source  = "terraform-google-modules/memorystore/google"
+  version = "~> 15.0"
+  count   = var.create_redis ? 1 : 0
+
+  name                    = "${var.name}-redis"
+  project_id              = var.google_project_id
+  region                  = var.region
+  authorized_network      = local.vpc_name
+  tier                    = var.redis_tier
+  connect_mode            = "PRIVATE_SERVICE_ACCESS"
+  reserved_ip_range       = google_compute_global_address.redis[0].name
+  auth_enabled            = true
+  transit_encryption_mode = var.redis_transit_encryption_mode
+  memory_size_gb          = var.redis_memory_size_gb
+
+  labels = var.tags
+
+  depends_on = [google_service_networking_connection.this[0]]
+}
+
+
+################################################################################
+# Service Networking
+################################################################################
+
+
+resource "google_service_networking_connection" "this" {
+  count = var.create_postgres || var.create_redis ? 1 : 0
+
+  network = local.vpc_self_link
+  service = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = flatten([
+    try(google_compute_global_address.postgres[0].name, ""),
+    try(google_compute_global_address.redis[0].name, "")
+  ])
+  deletion_policy         = "ABANDON"
+  update_on_creation_fail = true
 }
 
 

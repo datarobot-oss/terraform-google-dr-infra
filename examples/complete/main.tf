@@ -115,6 +115,14 @@ module "datarobot_infra" {
   postgres_deletion_protection   = false
 
   ################################################################################
+  # Redis
+  ################################################################################
+  create_redis                  = true
+  redis_tier                    = "STANDARD_HA"
+  redis_transit_encryption_mode = "SERVER_AUTHENTICATION"
+  redis_memory_size_gb          = 8
+
+  ################################################################################
   # Helm Charts
   ################################################################################
   install_helm_charts = true
