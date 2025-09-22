@@ -4,6 +4,12 @@ All notable changes are documented in this file.
 
 
 
+## v1.2.2
+
+### Added
+- `mongodb` module to create a Mongodb Atlas project and cluster
+
+
 ## v1.2.1
 
 ### Added

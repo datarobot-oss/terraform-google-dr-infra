@@ -16,7 +16,7 @@ locals {
   vpc_name      = try(data.google_compute_network.existing[0].name, module.network[0].network_name, null)
   vpc_self_link = try(data.google_compute_network.existing[0].self_link, module.network[0].network_self_link, null)
 
-  default_kubernetes_nodes_subnet_name = "${var.name}-vpc-snet"
+  default_kubernetes_nodes_subnet_name = "${var.name}-vpc-snet-kubernetes"
   kubernetes_nodes_subnet_name         = var.existing_vpc_name != null ? var.existing_kubernetes_nodes_subnet_name : try(module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].name, null)
 
   default_kubernetes_pods_range_name = "kubernetes-pods"
@@ -24,6 +24,11 @@ locals {
 
   default_kubernetes_services_range_name = "kubernetes-services"
   kubernetes_services_range_name         = var.existing_vpc_name != null ? var.existing_kubernetes_services_range_name : local.default_kubernetes_services_range_name
+
+  kubernetes_nodes_cidr = cidrsubnet(var.network_address_space, 4, 0)
+  redis_cidr            = cidrsubnet(var.network_address_space, 8, 64)
+  postgres_cidr         = cidrsubnet(var.network_address_space, 8, 65)
+  mongodb_cidr          = cidrsubnet(var.network_address_space, 8, 66)
 }
 
 module "network" {
@@ -37,7 +42,7 @@ module "network" {
   subnets = [
     {
       subnet_name           = local.default_kubernetes_nodes_subnet_name
-      subnet_ip             = cidrsubnet(var.network_address_space, 4, 0) #/20
+      subnet_ip             = local.kubernetes_nodes_cidr
       subnet_region         = var.region
       subnet_private_access = true
     }
@@ -311,10 +316,6 @@ resource "google_service_account_iam_member" "datarobot" {
 # PostgreSQL
 ################################################################################
 
-locals {
-  postgres_cidr = cidrsubnet(var.network_address_space, 8, 64)
-}
-
 resource "google_compute_global_address" "postgres" {
   count = var.create_postgres ? 1 : 0
 
@@ -369,10 +370,6 @@ module "postgres" {
 # Redis
 ################################################################################
 
-locals {
-  redis_cidr = cidrsubnet(var.network_address_space, 8, 65)
-}
-
 resource "google_compute_global_address" "redis" {
   count = var.create_redis ? 1 : 0
 
@@ -411,7 +408,6 @@ module "redis" {
 # Service Networking
 ################################################################################
 
-
 resource "google_service_networking_connection" "this" {
   count = var.create_postgres || var.create_redis ? 1 : 0
 
@@ -423,6 +419,42 @@ resource "google_service_networking_connection" "this" {
   ])
   deletion_policy         = "ABANDON"
   update_on_creation_fail = true
+}
+
+
+################################################################################
+# MongoDB
+################################################################################
+
+provider "mongodbatlas" {
+  public_key  = var.mongodb_atlas_public_key
+  private_key = var.mongodb_atlas_private_key
+}
+
+module "mongodb" {
+  source = "./modules/mongodb"
+  count  = var.create_mongodb ? 1 : 0
+
+  name                   = var.name
+  google_project_id      = var.google_project_id
+  region                 = var.region
+  vpc_name               = local.vpc_name
+  subnet_cidr            = local.mongodb_cidr
+  project_ip_access_list = var.network_address_space
+
+  mongodb_version                    = var.mongodb_version
+  atlas_org_id                       = var.mongodb_atlas_org_id
+  termination_protection_enabled     = var.mongodb_termination_protection_enabled
+  db_audit_enable                    = var.mongodb_audit_enable
+  atlas_auto_scaling_disk_gb_enabled = var.mongodb_atlas_auto_scaling_disk_gb_enabled
+  atlas_disk_size                    = var.mongodb_atlas_disk_size
+  atlas_instance_type                = var.mongodb_atlas_instance_type
+  mongodb_admin_username             = var.mongodb_admin_username
+  enable_slack_alerts                = var.mongodb_enable_slack_alerts
+  slack_api_token                    = var.mongodb_slack_api_token
+  slack_notification_channel         = var.mongodb_slack_notification_channel
+
+  tags = var.tags
 }
 
 

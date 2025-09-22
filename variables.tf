@@ -424,6 +424,95 @@ variable "redis_memory_size_gb" {
 
 
 ################################################################################
+# MongoDB
+################################################################################
+
+variable "create_mongodb" {
+  description = "Whether to create a MongoDB Atlas instance"
+  type        = bool
+  default     = false
+}
+
+variable "mongodb_version" {
+  description = "MongoDB version"
+  type        = string
+  default     = "7.0"
+}
+
+variable "mongodb_atlas_org_id" {
+  description = "Atlas organization ID"
+  type        = string
+  default     = null
+}
+
+variable "mongodb_atlas_public_key" {
+  description = "Public API key for Mongo Atlas"
+  type        = string
+  default     = ""
+}
+
+variable "mongodb_atlas_private_key" {
+  description = "Private API key for Mongo Atlas"
+  type        = string
+  default     = ""
+}
+
+variable "mongodb_termination_protection_enabled" {
+  description = "Enable protection to avoid accidental production cluster termination"
+  type        = bool
+  default     = false
+}
+
+variable "mongodb_audit_enable" {
+  type        = bool
+  description = "Enable database auditing for production instances only(cost incurred 10%)"
+  default     = false
+}
+
+variable "mongodb_atlas_auto_scaling_disk_gb_enabled" {
+  description = "Enable Atlas disk size autoscaling"
+  type        = bool
+  default     = true
+}
+
+variable "mongodb_atlas_disk_size" {
+  description = "Starting atlas disk size"
+  type        = string
+  default     = "20"
+}
+
+variable "mongodb_atlas_instance_type" {
+  description = "atlas instance type"
+  type        = string
+  default     = "M30"
+}
+
+variable "mongodb_admin_username" {
+  description = "MongoDB admin username"
+  type        = string
+  default     = "pcs-mongodb"
+}
+
+variable "mongodb_enable_slack_alerts" {
+  description = "Enable alert notifications to a Slack channel. When `true`, `slack_api_token` and `slack_notification_channel` must be set."
+  type        = string
+  default     = false
+}
+
+variable "mongodb_slack_api_token" {
+  description = "Slack API token to use for alert notifications. Required when `enable_slack_alerts` is `true`."
+  type        = string
+  default     = null
+}
+
+variable "mongodb_slack_notification_channel" {
+  description = "Slack channel to send alert notifications to. Required when `enable_slack_alerts` is `true`."
+  type        = string
+  default     = null
+}
+
+
+################################################################################
 # Helm Charts
 ################################################################################
 

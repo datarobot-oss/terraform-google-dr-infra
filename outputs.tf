@@ -102,3 +102,18 @@ output "redis_password" {
   value       = try(module.redis[0].auth_string, null)
   sensitive   = true
 }
+
+################################################################################
+# MongoDB
+################################################################################
+
+output "mongodb_endpoint" {
+  description = "MongoDB endpoint"
+  value       = try(module.mongodb[0].endpoint, null)
+}
+
+output "mongodb_password" {
+  description = "MongoDB admin password"
+  value       = try(module.mongodb[0].password, null)
+  sensitive   = true
+}

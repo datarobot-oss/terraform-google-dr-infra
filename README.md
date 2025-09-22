@@ -22,6 +22,7 @@ module "datarobot_infra" {
   create_app_identity                = true
   create_postgres                    = true
   create_redis                       = true
+  create_mongodb                     = true
 
   ingress_nginx                           = true
   internet_facing_ingress_lb              = true
@@ -177,6 +178,17 @@ TBD
 
 #### Description
 Create a Memorystore Redis instance connected to via service networking.
+
+#### Permissions
+TBD
+
+
+### MongoDB
+#### Toggle
+- `create_mongodb` to create a new MongoDB Atlas cluster
+
+#### Description
+Create a MongoDB Atlas project and cluster for use by the DataRobot application.
 
 #### Permissions
 TBD
