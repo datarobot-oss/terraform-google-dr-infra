@@ -148,9 +148,11 @@ module "datarobot_infra" {
   ################################################################################
   # ingress-nginx
   ################################################################################
-  ingress_nginx              = true
-  ingress_nginx_namespace    = "ingress-nginx"
-  internet_facing_ingress_lb = true
+  ingress_nginx                 = true
+  ingress_nginx_namespace       = "ingress-nginx"
+  internet_facing_ingress_lb    = true
+  create_ingress_psc            = true
+  ingress_psc_consumer_projects = ["your-google-project-id"]
 
   # in this case our custom values file override is formatted as a templatefile
   # so we can pass variables like our provisioner_public_ip to it.

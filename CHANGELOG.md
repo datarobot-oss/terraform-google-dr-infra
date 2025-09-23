@@ -4,6 +4,12 @@ All notable changes are documented in this file.
 
 
 
+## v1.2.3
+
+### Added
+- `create_ingress_psc` to expose the Kubernetes ingress via Private Service Connect
+
+
 ## v1.2.2
 
 ### Added

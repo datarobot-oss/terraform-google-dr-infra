@@ -16,19 +16,17 @@ locals {
   vpc_name      = try(data.google_compute_network.existing[0].name, module.network[0].network_name, null)
   vpc_self_link = try(data.google_compute_network.existing[0].self_link, module.network[0].network_self_link, null)
 
-  default_kubernetes_nodes_subnet_name = "${var.name}-vpc-snet-kubernetes"
-  kubernetes_nodes_subnet_name         = var.existing_vpc_name != null ? var.existing_kubernetes_nodes_subnet_name : try(module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].name, null)
+  kubernetes_nodes_subnet_name   = coalesce(var.existing_kubernetes_nodes_subnet_name, "${var.name}-vpc-snet-kubernetes")
+  kubernetes_pods_range_name     = coalesce(var.existing_kubernetes_pods_range_name, "kubernetes-pods")
+  kubernetes_services_range_name = coalesce(var.existing_kubernetes_services_range_name, "kubernetes-services")
 
-  default_kubernetes_pods_range_name = "kubernetes-pods"
-  kubernetes_pods_range_name         = var.existing_vpc_name != null ? var.existing_kubernetes_pods_range_name : local.default_kubernetes_pods_range_name
-
-  default_kubernetes_services_range_name = "kubernetes-services"
-  kubernetes_services_range_name         = var.existing_vpc_name != null ? var.existing_kubernetes_services_range_name : local.default_kubernetes_services_range_name
+  psc_subnet_name = "${var.name}-vpc-snet-psc"
 
   kubernetes_nodes_cidr = cidrsubnet(var.network_address_space, 4, 0)
   redis_cidr            = cidrsubnet(var.network_address_space, 8, 64)
   postgres_cidr         = cidrsubnet(var.network_address_space, 8, 65)
   mongodb_cidr          = cidrsubnet(var.network_address_space, 8, 66)
+  psc_cidr              = cidrsubnet(var.network_address_space, 8, 67)
 }
 
 module "network" {
@@ -41,20 +39,27 @@ module "network" {
   network_name = "${var.name}-vpc"
   subnets = [
     {
-      subnet_name           = local.default_kubernetes_nodes_subnet_name
+      subnet_name           = local.kubernetes_nodes_subnet_name
       subnet_ip             = local.kubernetes_nodes_cidr
       subnet_region         = var.region
       subnet_private_access = true
+    },
+    {
+      subnet_name           = local.psc_subnet_name
+      subnet_ip             = local.psc_cidr
+      subnet_region         = var.region
+      subnet_private_access = true
+      purpose               = "PRIVATE_SERVICE_CONNECT"
     }
   ]
   secondary_ranges = {
-    (local.default_kubernetes_nodes_subnet_name) = [
+    (local.kubernetes_nodes_subnet_name) = [
       {
-        range_name    = local.default_kubernetes_pods_range_name
+        range_name    = local.kubernetes_pods_range_name
         ip_cidr_range = var.kubernetes_pod_cidr
       },
       {
-        range_name    = local.default_kubernetes_services_range_name
+        range_name    = local.kubernetes_services_range_name
         ip_cidr_range = var.kubernetes_service_cidr
       }
     ]
@@ -77,9 +82,9 @@ module "cloud_router" {
     source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
     subnetworks = [
       {
-        name                     = module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].id
+        name                     = module.network[0].subnets["${var.region}/${local.kubernetes_nodes_subnet_name}"].id
         source_ip_ranges_to_nat  = ["PRIMARY_IP_RANGE", "LIST_OF_SECONDARY_IP_RANGES"]
-        secondary_ip_range_names = [module.network[0].subnets["${var.region}/${local.default_kubernetes_nodes_subnet_name}"].secondary_ip_range[0].range_name]
+        secondary_ip_range_names = [module.network[0].subnets["${var.region}/${local.kubernetes_nodes_subnet_name}"].secondary_ip_range[0].range_name]
       }
     ]
   }]
@@ -211,7 +216,6 @@ module "kubernetes" {
   kubernetes_version            = var.kubernetes_cluster_version
   release_channel               = var.release_channel
   datapath_provider             = "ADVANCED_DATAPATH"
-  http_load_balancing           = false
   network                       = local.vpc_name
   subnetwork                    = local.kubernetes_nodes_subnet_name
   ip_range_pods                 = local.kubernetes_pods_range_name
@@ -470,6 +474,13 @@ provider "helm" {
   }
 }
 
+provider "kubectl" {
+  host                   = "https://${local.gke_cluster_endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(local.gke_cluster_ca_certificate)
+  load_config_file       = false
+}
+
 
 module "ingress_nginx" {
   source = "./modules/ingress-nginx"
@@ -480,6 +491,11 @@ module "ingress_nginx" {
   namespace                  = var.ingress_nginx_namespace
   custom_values_templatefile = var.ingress_nginx_values
   custom_values_variables    = var.ingress_nginx_variables
+
+  create_psc                       = var.create_ingress_psc
+  psc_connection_preference        = length(var.ingress_psc_consumer_projects) > 0 ? "ACCEPT_MANUAL" : "ACCEPT_AUTOMATIC"
+  psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
+  psc_nat_subnets                  = [local.psc_subnet_name]
 
   depends_on = [local.gke_cluster_name]
 }
