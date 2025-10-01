@@ -38,24 +38,6 @@ variable "existing_vpc_name" {
   default     = null
 }
 
-variable "existing_kubernetes_nodes_subnet_name" {
-  description = "Name of an existing subnet to use for the GKE node pools and control plane private endpoint. Required when an existing_vpc_name is specified. Ignored if no existing_vpc_name is specified."
-  type        = string
-  default     = null
-}
-
-variable "existing_kubernetes_pods_range_name" {
-  description = "Name of an secondary IP range within subnet defined by existing_kubernetes_nodes_subnet_name to use for the Kubernetes pods. Required when an existing_vpc_name is specified. Ignored if no existing_vpc_name is specified."
-  type        = string
-  default     = null
-}
-
-variable "existing_kubernetes_services_range_name" {
-  description = "Name of an secondary IP range within subnet defined by existing_kubernetes_nodes_subnet_name to use for the Kubernetes services. Required when an existing_vpc_name is specified. Ignored if no existing_vpc_name is specified."
-  type        = string
-  default     = null
-}
-
 variable "create_network" {
   description = "Create a new Google VPC. Ignored if an existing existing_vpc_id is specified."
   type        = bool
@@ -63,21 +45,45 @@ variable "create_network" {
 }
 
 variable "network_address_space" {
-  description = "The CIDR to use for the Kubernetes nodes and control plane."
+  description = "The CIDR to use for the VPC and subnets created by this module"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "10.0.0.0/20"
+}
+
+variable "kubernetes_nodes_cidr" {
+  description = "The CIDR to use for Kubernetes nodes IP addresses. This is used as the primary IP range for the Kubernetes nodes subnet."
+  type        = string
+  default     = null
+}
+
+variable "kubernetes_master_ipv4_cidr" {
+  description = "The IP range in CIDR notation to use for the hosted master network including the Kubernetes control plane. If you use this flag, GKE creates a new subnet that uses the values you defined in master-ipv4-cidr and uses the new subnet to provision the internal IP address for the control plane."
+  type        = string
+  default     = null
 }
 
 variable "kubernetes_pod_cidr" {
   description = "The CIDR to use for Kubernetes pod IP addresses. This is used as a secondary IP range within the Kubernetes nodes subnet."
   type        = string
-  default     = "192.168.0.0/18"
+  default     = "172.16.0.0/15"
 }
 
-variable "kubernetes_service_cidr" {
-  description = "The CIDR to use for Kubernetes service IP addresses. This is used as a secondary IP range within the Kubernetes nodes subnet."
+variable "postgres_cidr" {
+  description = "CIDR range to use for PostgreSQL private IP"
   type        = string
-  default     = "192.168.64.0/18"
+  default     = null
+}
+
+variable "redis_cidr" {
+  description = "CIDR range to use for Redis private IP"
+  type        = string
+  default     = null
+}
+
+variable "mongodb_subnet_cidr" {
+  description = "CIDR range to use for MongoDB Atlas VPC Peering. Only used when `create_network` is `true` and an `existing_vpc_name` is not specified."
+  type        = string
+  default     = null
 }
 
 
@@ -161,6 +167,19 @@ variable "existing_gke_cluster_name" {
   default     = null
 }
 
+
+variable "existing_kubernetes_nodes_subnet" {
+  description = "Name of an existing subnet to use for the GKE node pools and control plane private endpoint. Required when `create_kubernetes_cluster` is `true` and an `existing_vpc_name` is specified. Ignored if no `existing_vpc_name` is specified."
+  type        = string
+  default     = null
+}
+
+variable "existing_kubernetes_pods_range_name" {
+  description = "Name of an secondary IP range within subnet defined by existing_kubernetes_nodes_subnet_name to use for the Kubernetes pods. Required when an existing_vpc_name is specified. Ignored if no existing_vpc_name is specified."
+  type        = string
+  default     = null
+}
+
 variable "create_kubernetes_cluster" {
   description = "Create a new Google Kubernetes Engine cluster. All kubernetes and helm chart variables are ignored if this variable is false."
   type        = bool
@@ -203,104 +222,38 @@ variable "kubernetes_cluster_endpoint_access_list" {
   default     = []
 }
 
-variable "kubernetes_master_ipv4_cidr_block" {
-  description = "The IP range in CIDR notation to use for the hosted master network including the Kubernetes control plane. If you use this flag, GKE creates a new subnet that uses the values you defined in master-ipv4-cidr and uses the new subnet to provision the internal IP address for the control plane."
-  type        = string
-  default     = null
-}
-
-variable "kubernetes_primary_nodepool_name" {
-  description = "Name of the primary node pool"
-  type        = string
-  default     = "primary"
-}
-
-variable "kubernetes_primary_nodepool_vm_size" {
-  description = "VM size used for the primary node pool"
-  type        = string
-  default     = "e2-standard-32"
-}
-
-variable "kubernetes_primary_nodepool_node_count" {
-  description = "Node count of the primary node pool"
-  type        = number
-  default     = 1
-}
-
-variable "kubernetes_primary_nodepool_min_count" {
-  description = "Minimum number of nodes in the primary node pool"
-  type        = number
-  default     = 1
-}
-
-variable "kubernetes_primary_nodepool_max_count" {
-  description = "Maximum number of nodes in the primary node pool"
-  type        = number
-  default     = 10
-}
-
-variable "kubernetes_primary_nodepool_labels" {
-  description = "A map of Kubernetes labels to apply to the primary node pool"
-  type        = map(string)
-  default = {
-    "datarobot.com/node-capability" = "cpu"
-  }
-}
-
-variable "kubernetes_primary_nodepool_taints" {
-  description = "A list of Kubernetes taints to apply to the primary node pool"
+variable "kubernetes_node_pools" {
+  description = "Map of GKE node pools"
   type        = any
-  default     = []
-}
-
-variable "kubernetes_gpu_nodepool_name" {
-  description = "Name of the GPU node pool"
-  type        = string
-  default     = "gpu"
-}
-
-variable "kubernetes_gpu_nodepool_vm_size" {
-  description = "VM size used for the GPU node pool"
-  type        = string
-  default     = "n1-highmem-4"
-}
-
-variable "kubernetes_gpu_nodepool_node_count" {
-  description = "Node count of the GPU node pool"
-  type        = number
-  default     = 0
-}
-
-variable "kubernetes_gpu_nodepool_min_count" {
-  description = "Minimum number of nodes in the GPU node pool"
-  type        = number
-  default     = 0
-}
-
-variable "kubernetes_gpu_nodepool_max_count" {
-  description = "Maximum number of nodes in the GPU node pool"
-  type        = number
-  default     = 10
-}
-
-variable "kubernetes_gpu_nodepool_labels" {
-  description = "A map of Kubernetes labels to apply to the GPU node pool"
-  type        = map(string)
   default = {
-    "datarobot.com/node-capability" = "gpu"
-  }
-}
-
-variable "kubernetes_gpu_nodegroup_taints" {
-  description = "The Kubernetes taints to be applied to the nodes in the GPU node group."
-  type        = any
-  default = [
-    {
-      key    = "nvidia.com/gpu"
-      value  = "true"
-      effect = "NO_SCHEDULE"
+    drcpu = {
+      name         = "drcpu"
+      machine_type = "e2-standard-32"
+      disk_size_gb = 200
+      node_count   = 1
+      min_count    = 1
+      max_count    = 10
+      node_labels = {
+        "datarobot.com/node-capability" = "cpu"
+      }
+      node_taints = []
     }
-  ]
+    drgpu = {
+      name       = "drgpu"
+      vm_size    = "n1-highmem-4"
+      node_count = 0
+      min_count  = 0
+      max_count  = 10
+      node_labels = {
+        "datarobot.com/node-capability" = "gpu"
+      }
+      node_taints = [{
+        key    = "nvidia.com/gpu"
+        value  = "true"
+        effect = "NO_SCHEDULE"
+      }]
+    }
+  }
 }
 
 
@@ -433,6 +386,12 @@ variable "create_mongodb" {
   default     = false
 }
 
+variable "existing_mongodb_subnet_name" {
+  description = "Name of an existing subnet to use for MongoDB Atlas VPC Peering. Required when an existing_vpc_name is specified. Ignored if no existing_vpc_name is specified."
+  type        = string
+  default     = null
+}
+
 variable "mongodb_version" {
   description = "MongoDB version"
   type        = string
@@ -556,6 +515,18 @@ variable "create_ingress_psc" {
   description = "Expose the internal LB created by the ingress-nginx controller as a Google Private Service Connection. Only applies if internet_facing_ingress_lb is false."
   type        = bool
   default     = false
+}
+
+variable "existing_ingress_pcs_subnet_name" {
+  description = "Name of an existing subnet to use for the Private Service Connection used by the ingress-nginx controller. Required when an existing_vpc_name is specified and create_ingress_psc is true. Ignored if no existing_vpc_name is specified or create_ingress_psc is false."
+  type        = string
+  default     = null
+}
+
+variable "ingress_psc_subnet_cidr" {
+  description = "CIDR range to use for the Private Service Connection used by the ingress-nginx controller. Only used when `create_network` is `true` and an `existing_vpc_name` is not specified."
+  type        = string
+  default     = null
 }
 
 variable "ingress_psc_consumer_projects" {

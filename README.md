@@ -139,10 +139,10 @@ By default, the Kubernetes cluster API endpoint is accessible both via a private
 When `kubernetes_cluster_endpoint_public_access` is `false`, Kubernetes management operations such as `kubectl` and `helm` commands (including the Helm chart installs performed by this Terraform module) must be run from a host which can access the Kubernetes cluster API private endpoint. By default, any host within the GKE nodes subnet has access but this can be extended using the `kubernetes_cluster_endpoint_access_list` variable. This can be helpful when running this Terraform module from a host that resides within the same VPC as the GKE cluster but in a different subnet than the GKE nodes.
 
 Two node groups are created:
-- A `primary` node group intended to host the majority of the DataRobot pods
-- A `gpu` node group intended to host GPU workload pods containing the label `datarobot.com/node-capability: gpu` and taint `nvidia.com/gpu:NoSchedule`
+- A `drcpu` node group intended to host the majority of the DataRobot pods
+- A `drgpu` node group intended to host GPU workload pods containing the label `datarobot.com/node-capability: gpu` and taint `nvidia.com/gpu:NoSchedule`
 
-By default, slices of `network_address_space` will be used for the cluster nodes and control plane private endpoint IPs. It is best to use a separate address space for `kubernetes_pod_cidr` and `kubernetes_service_cidr` as these are secondary (aliased) ranges.
+By default, slices of `network_address_space` will be used for the cluster nodes and control plane private endpoint IPs. It is best to use a separate address space for `kubernetes_pod_cidr` as it is a secondary (aliased) range.
 
 #### Permissions
 TBD

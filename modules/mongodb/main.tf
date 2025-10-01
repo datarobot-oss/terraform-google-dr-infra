@@ -24,26 +24,19 @@ resource "mongodbatlas_privatelink_endpoint" "this" {
   }
 }
 
-resource "google_compute_subnetwork" "this" {
-  project       = var.google_project_id
-  region        = var.region
-  name          = "${var.name}-vpc-snet-mongodb"
-  description   = "MongoDB Atlas Subnet"
-  ip_cidr_range = var.subnet_cidr
-  network       = var.vpc_name
-}
-
 # https://github.com/mongodb/terraform-provider-mongodbatlas/tree/v2.0.0/examples/mongodbatlas_privatelink_endpoint/gcp
 # Create Google 50 Addresses
 resource "google_compute_address" "this" {
   count        = 50
   project      = var.google_project_id
   name         = "${var.name}-mongodb-address-${count.index}"
-  subnetwork   = google_compute_subnetwork.this.id
+  subnetwork   = var.subnet
   address_type = "INTERNAL"
   address      = cidrhost(var.subnet_cidr, count.index + 2) # GCP reserves first 2 addresses in subnet
   region       = var.region
   labels       = var.tags
+
+  depends_on = [mongodbatlas_privatelink_endpoint.this]
 }
 
 # Create 50 Forwarding rules
@@ -78,6 +71,8 @@ resource "mongodbatlas_privatelink_endpoint_service" "this" {
       endpoint_name = google_compute_forwarding_rule.this[endpoints.key].name
     }
   }
+
+  depends_on = [google_compute_forwarding_rule.this]
 }
 
 resource "mongodbatlas_advanced_cluster" "this" {

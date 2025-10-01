@@ -16,17 +16,24 @@ locals {
   vpc_name      = try(data.google_compute_network.existing[0].name, module.network[0].network_name, null)
   vpc_self_link = try(data.google_compute_network.existing[0].self_link, module.network[0].network_self_link, null)
 
-  kubernetes_nodes_subnet_name   = coalesce(var.existing_kubernetes_nodes_subnet_name, "${var.name}-vpc-snet-kubernetes")
-  kubernetes_pods_range_name     = coalesce(var.existing_kubernetes_pods_range_name, "kubernetes-pods")
-  kubernetes_services_range_name = coalesce(var.existing_kubernetes_services_range_name, "kubernetes-services")
-
-  psc_subnet_name = "${var.name}-vpc-snet-psc"
-
-  kubernetes_nodes_cidr = cidrsubnet(var.network_address_space, 4, 0)
-  redis_cidr            = cidrsubnet(var.network_address_space, 8, 64)
-  postgres_cidr         = cidrsubnet(var.network_address_space, 8, 65)
-  mongodb_cidr          = cidrsubnet(var.network_address_space, 8, 66)
-  psc_cidr              = cidrsubnet(var.network_address_space, 8, 67)
+  # The default IP allotment is as follows:
+  # 10.0.0.0/20  VPC
+  # 10.0.0.0/23  Kubernetes nodes subnet supports up to 508 nodes
+  # 10.0.6.0/24  Postgres subnet
+  # 10.0.7.0/24  Redis subnet
+  # 10.0.8.0/24  MongoDB subnet
+  # 10.0.9.0/24  Ingress PSC subnet
+  # 10.0.15.0/28 Kubernetes master IPv4 CIDR block must be /28
+  kubernetes_nodes_subnet_name = "${var.name}-kubernetes-nodes"
+  kubernetes_pods_range_name   = coalesce(var.existing_kubernetes_pods_range_name, "kubernetes-pods")
+  kubernetes_nodes_subnet_cidr = coalesce(var.kubernetes_nodes_cidr, cidrsubnet(var.network_address_space, 3, 0))
+  postgres_cidr                = coalesce(var.postgres_cidr, cidrsubnet(var.network_address_space, 4, 6))
+  redis_cidr                   = coalesce(var.redis_cidr, cidrsubnet(var.network_address_space, 4, 7))
+  mongodb_subnet_name          = "${var.name}-mongodb"
+  mongodb_subnet_cidr          = coalesce(var.mongodb_subnet_cidr, cidrsubnet(var.network_address_space, 4, 8))
+  ingress_psc_subnet_name      = "${var.name}-ingress-psc"
+  ingress_psc_subnet_cidr      = coalesce(var.ingress_psc_subnet_cidr, cidrsubnet(var.network_address_space, 4, 9))
+  kubernetes_master_ipv4_cidr  = coalesce(var.kubernetes_master_ipv4_cidr, cidrsubnet(var.network_address_space, 8, 240))
 }
 
 module "network" {
@@ -40,13 +47,19 @@ module "network" {
   subnets = [
     {
       subnet_name           = local.kubernetes_nodes_subnet_name
-      subnet_ip             = local.kubernetes_nodes_cidr
+      subnet_ip             = local.kubernetes_nodes_subnet_cidr
       subnet_region         = var.region
       subnet_private_access = true
     },
     {
-      subnet_name           = local.psc_subnet_name
-      subnet_ip             = local.psc_cidr
+      subnet_name           = local.mongodb_subnet_name
+      subnet_ip             = local.mongodb_subnet_cidr
+      subnet_region         = var.region
+      subnet_private_access = true
+    },
+    {
+      subnet_name           = local.ingress_psc_subnet_name
+      subnet_ip             = local.ingress_psc_subnet_cidr
       subnet_region         = var.region
       subnet_private_access = true
       purpose               = "PRIVATE_SERVICE_CONNECT"
@@ -57,10 +70,6 @@ module "network" {
       {
         range_name    = local.kubernetes_pods_range_name
         ip_cidr_range = var.kubernetes_pod_cidr
-      },
-      {
-        range_name    = local.kubernetes_services_range_name
-        ip_cidr_range = var.kubernetes_service_cidr
       }
     ]
   }
@@ -196,15 +205,28 @@ data "google_container_cluster" "existing" {
   name     = var.existing_gke_cluster_name
 }
 
+data "google_compute_subnetwork" "existing_kubernetes_nodes" {
+  count = var.existing_kubernetes_nodes_subnet != null ? 1 : 0
+
+  project = var.google_project_id
+  name    = var.existing_kubernetes_nodes_subnet
+  region  = var.region
+}
+
 locals {
   gke_cluster_name           = try(data.google_container_cluster.existing[0].name, module.kubernetes[0].name, null)
   gke_cluster_ca_certificate = try(data.google_container_cluster.existing[0].master_auth[0].cluster_ca_certificate, module.kubernetes[0].ca_certificate, "")
   gke_cluster_endpoint       = try(data.google_container_cluster.existing[0].endpoint, module.kubernetes[0].endpoint, "")
+
+  kubernetes_nodes_subnet = try(data.google_compute_subnetwork.existing_kubernetes_nodes[0], module.network[0].subnets["${var.region}/${local.kubernetes_nodes_subnet_name}"], null)
+
+  # strip taints and labels from kubernetes_node_pools map
+  kubernetes_node_pools = [for np in var.kubernetes_node_pools : { for k, v in np : k => v if k != "node_taints" && k != "node_labels" }]
 }
 
 module "kubernetes" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
-  version = "~> 33.0"
+  version = "~> 39.0"
   count   = var.existing_gke_cluster_name == null && var.create_kubernetes_cluster ? 1 : 0
 
   project_id = var.google_project_id
@@ -217,12 +239,11 @@ module "kubernetes" {
   release_channel               = var.release_channel
   datapath_provider             = "ADVANCED_DATAPATH"
   network                       = local.vpc_name
-  subnetwork                    = local.kubernetes_nodes_subnet_name
+  subnetwork                    = local.kubernetes_nodes_subnet.name
   ip_range_pods                 = local.kubernetes_pods_range_name
-  ip_range_services             = local.kubernetes_services_range_name
   enable_private_endpoint       = !var.kubernetes_cluster_endpoint_public_access
   deploy_using_private_endpoint = !var.kubernetes_cluster_endpoint_public_access
-  master_ipv4_cidr_block        = coalesce(var.kubernetes_master_ipv4_cidr_block, cidrsubnet(var.network_address_space, 12, 256))
+  master_ipv4_cidr_block        = local.kubernetes_master_ipv4_cidr
   master_authorized_networks = [for ip in var.kubernetes_cluster_endpoint_access_list : {
     cidr_block   = ip
     display_name = ip
@@ -243,34 +264,9 @@ module "kubernetes" {
     auto_upgrade        = true
   }
 
-  node_pools = [
-    {
-      name         = var.kubernetes_primary_nodepool_name
-      machine_type = var.kubernetes_primary_nodepool_vm_size
-      disk_size_gb = 200
-      node_count   = var.kubernetes_primary_nodepool_node_count
-      min_count    = var.kubernetes_primary_nodepool_min_count
-      max_count    = var.kubernetes_primary_nodepool_max_count
-    },
-    {
-      name         = var.kubernetes_gpu_nodepool_name
-      machine_type = var.kubernetes_gpu_nodepool_vm_size
-      disk_size_gb = 200
-      node_count   = var.kubernetes_gpu_nodepool_node_count
-      min_count    = var.kubernetes_gpu_nodepool_min_count
-      max_count    = var.kubernetes_gpu_nodepool_max_count
-    }
-  ]
-
-  node_pools_labels = {
-    (var.kubernetes_primary_nodepool_name) = var.kubernetes_primary_nodepool_labels
-    (var.kubernetes_gpu_nodepool_name)     = var.kubernetes_gpu_nodepool_labels
-  }
-
-  node_pools_taints = {
-    (var.kubernetes_primary_nodepool_name) = var.kubernetes_primary_nodepool_taints
-    (var.kubernetes_gpu_nodepool_name)     = var.kubernetes_gpu_nodegroup_taints
-  }
+  node_pools        = local.kubernetes_node_pools
+  node_pools_labels = { for k, v in var.kubernetes_node_pools : k => v.node_labels }
+  node_pools_taints = { for k, v in var.kubernetes_node_pools : k => v.node_taints }
 
   cluster_resource_labels = var.tags
 }
@@ -435,6 +431,18 @@ provider "mongodbatlas" {
   private_key = var.mongodb_atlas_private_key
 }
 
+data "google_compute_subnetwork" "existing_mongodb" {
+  count = var.existing_mongodb_subnet_name != null ? 1 : 0
+
+  project = var.google_project_id
+  name    = var.existing_mongodb_subnet_name
+  region  = var.region
+}
+
+locals {
+  mongodb_subnet = try(data.google_compute_subnetwork.existing_mongodb[0], module.network[0].subnets["${var.region}/${local.mongodb_subnet_name}"], null)
+}
+
 module "mongodb" {
   source = "./modules/mongodb"
   count  = var.create_mongodb ? 1 : 0
@@ -443,8 +451,9 @@ module "mongodb" {
   google_project_id      = var.google_project_id
   region                 = var.region
   vpc_name               = local.vpc_name
-  subnet_cidr            = local.mongodb_cidr
-  project_ip_access_list = var.network_address_space
+  subnet                 = local.mongodb_subnet.name
+  subnet_cidr            = local.mongodb_subnet.ip_cidr_range
+  project_ip_access_list = local.kubernetes_nodes_subnet.ip_cidr_range
 
   mongodb_version                    = var.mongodb_version
   atlas_org_id                       = var.mongodb_atlas_org_id
@@ -482,6 +491,18 @@ provider "kubectl" {
 }
 
 
+data "google_compute_subnetwork" "existing_ingress_psc" {
+  count = var.existing_ingress_pcs_subnet_name != null ? 1 : 0
+
+  project = var.google_project_id
+  name    = var.existing_ingress_pcs_subnet_name
+  region  = var.region
+}
+
+locals {
+  ingress_psc_subnet = try(data.google_compute_subnetwork.existing_ingress_psc[0], module.network[0].subnets["${var.region}/${local.ingress_psc_subnet_name}"], null)
+}
+
 module "ingress_nginx" {
   source = "./modules/ingress-nginx"
   count  = var.install_helm_charts && var.ingress_nginx ? 1 : 0
@@ -495,7 +516,7 @@ module "ingress_nginx" {
   create_psc                       = var.create_ingress_psc
   psc_connection_preference        = length(var.ingress_psc_consumer_projects) > 0 ? "ACCEPT_MANUAL" : "ACCEPT_AUTOMATIC"
   psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
-  psc_nat_subnets                  = [local.psc_subnet_name]
+  psc_nat_subnets                  = [local.ingress_psc_subnet.name]
 
   depends_on = [local.gke_cluster_name]
 }

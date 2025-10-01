@@ -26,10 +26,9 @@ module "datarobot_infra" {
   ################################################################################
   # Network
   ################################################################################
-  create_network          = true
-  network_address_space   = "10.7.0.0/16"
-  kubernetes_pod_cidr     = "192.168.0.0/18"
-  kubernetes_service_cidr = "192.168.64.0/18"
+  create_network        = true
+  network_address_space = "10.0.0.0/20"
+  kubernetes_pod_cidr   = "172.16.0.0/15"
 
   ################################################################################
   # DNS
@@ -52,37 +51,41 @@ module "datarobot_infra" {
   # Kubernetes
   ################################################################################
   create_kubernetes_cluster                 = true
-  kubernetes_cluster_version                = "1.30"
+  kubernetes_cluster_version                = "1.33"
   release_channel                           = "REGULAR"
   kubernetes_cluster_deletion_protection    = false
   kubernetes_cluster_endpoint_public_access = true
   kubernetes_cluster_endpoint_access_list   = ["${local.provisioner_public_ip}/32"]
-  kubernetes_master_ipv4_cidr_block         = "10.7.16.0/28"
-  kubernetes_primary_nodepool_name          = "primary"
-  kubernetes_primary_nodepool_vm_size       = "e2-standard-32"
-  kubernetes_primary_nodepool_node_count    = 1
-  kubernetes_primary_nodepool_min_count     = 1
-  kubernetes_primary_nodepool_max_count     = 10
-  kubernetes_primary_nodepool_labels = {
-    "datarobot.com/node-capability" = "cpu"
-  }
-  kubernetes_primary_nodepool_taints = []
-
-  kubernetes_gpu_nodepool_name       = "gpu"
-  kubernetes_gpu_nodepool_vm_size    = "n1-highmem-4"
-  kubernetes_gpu_nodepool_node_count = 0
-  kubernetes_gpu_nodepool_min_count  = 0
-  kubernetes_gpu_nodepool_max_count  = 10
-  kubernetes_gpu_nodepool_labels = {
-    "datarobot.com/node-capability" = "gpu"
-  }
-  kubernetes_gpu_nodegroup_taints = [
-    {
-      key    = "nvidia.com/gpu"
-      value  = ""
-      effect = "NO_SCHEDULE"
+  kubernetes_master_ipv4_cidr               = "10.0.15.0/28"
+  kubernetes_node_pools = {
+    drcpu = {
+      name         = "drcpu"
+      machine_type = "e2-standard-32"
+      disk_size_gb = 200
+      node_count   = 1
+      min_count    = 1
+      max_count    = 10
+      node_labels = {
+        "datarobot.com/node-capability" = "cpu"
+      }
+      node_taints = []
     }
-  ]
+    drgpu = {
+      name       = "drgpu"
+      vm_size    = "n1-highmem-4"
+      node_count = 0
+      min_count  = 0
+      max_count  = 10
+      node_labels = {
+        "datarobot.com/node-capability" = "gpu"
+      }
+      node_taints = [{
+        key    = "nvidia.com/gpu"
+        value  = "true"
+        effect = "NO_SCHEDULE"
+      }]
+    }
+  }
 
   ################################################################################
   # App Identity
@@ -90,16 +93,19 @@ module "datarobot_infra" {
   create_app_identity = true
   datarobot_namespace = "dr-app"
   datarobot_service_accounts = [
-    "dr",
-    "build-service",
-    "build-service-image-builder",
-    "buzok-account",
-    "dr-lrs-operator",
+    "datarobot-storage-sa",
     "dynamic-worker",
-    "internal-api-sa",
-    "nbx-notebook-revisions-account",
+    "kubeworker-sa",
     "prediction-server-sa",
-    "tileservergl-sa"
+    "internal-api-sa",
+    "build-service",
+    "tileservergl-sa",
+    "nbx-notebook-revisions-account",
+    "buzok-account",
+    "exec-manager-qw",
+    "exec-manager-wrangling",
+    "lrs-job-manager",
+    "blob-view-service",
   ]
 
   ################################################################################

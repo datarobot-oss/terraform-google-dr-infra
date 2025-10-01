@@ -3,6 +3,16 @@
 All notable changes are documented in this file.
 
 
+## v1.3.0
+
+### Added
+- customizable node pools via the `kubernetes_node_pools` variable
+
+### Updated
+- `network_address_space` to `10.0.0.0/20`
+- `terraform-google-modules/kubernetes-engine/google//modules/private-cluster` to `~> 39.0`
+- allow specification of existing network resources for PCS components
+
 
 ## v1.2.3
 

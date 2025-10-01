@@ -18,6 +18,11 @@ variable "vpc_name" {
   type        = string
 }
 
+variable "subnet" {
+  description = "subnet which will host the MongoDB Atlas private endpoint interfaces"
+  type        = string
+}
+
 variable "subnet_cidr" {
   description = "CIDR fo the subnet which will host the MongoDB Atlas private endpoint interfaces"
   type        = string
