@@ -22,9 +22,9 @@ resource "google_dns_managed_zone_iam_member" "external_dns" {
 resource "helm_release" "external_dns" {
   name       = "external-dns"
   namespace  = var.namespace
-  repository = "https://charts.bitnami.com/bitnami"
+  repository = "https://kubernetes-sigs.github.io/external-dns"
   chart      = "external-dns"
-  version    = "8.5.1"
+  version    = "1.19.0"
 
   create_namespace = true
 
