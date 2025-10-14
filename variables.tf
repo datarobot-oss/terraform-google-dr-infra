@@ -470,6 +470,11 @@ variable "mongodb_slack_notification_channel" {
   default     = null
 }
 
+variable "mongodb_network_reservation_ip_offset" {
+  type        = number
+  default     = 2
+  description = "Value to offset the network reservation IP"
+}
 
 ################################################################################
 # Helm Charts
