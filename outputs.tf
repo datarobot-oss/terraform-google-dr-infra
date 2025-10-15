@@ -97,6 +97,11 @@ output "redis_endpoint" {
   value       = try(module.redis[0].host, null)
 }
 
+output "redis_port" {
+  description = "Google Memorystore Redis port"
+  value       = try(module.redis[0].port, null)
+}
+
 output "redis_password" {
   description = "Google Memorystore Redis instance primary access key"
   value       = try(module.redis[0].auth_string, null)
