@@ -95,3 +95,8 @@ variable "tags" {
   description = "A map of tags to add to all created resources"
   type        = map(string)
 }
+
+variable "network_reservation_ip_offset" {
+  type        = number
+  description = "Value to offset the network reservation IP"
+}

@@ -2,6 +2,10 @@
 
 All notable changes are documented in this file.
 
+## v1.3.2
+### Added
+- `mongodb_network_reservation_ip_offset` to allow set offset in mongo IP reservation
+
 ## v1.3.1
 ### Updated
 - `external-dns` from bitnami to kubernetes-sigs `1.19.0`
