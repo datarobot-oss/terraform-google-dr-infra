@@ -2,7 +2,7 @@
 
 All notable changes are documented in this file.
 
-## v1.4.0
+## v1.3.2
 ### Added
 - `mongodb_network_reservation_ip_offset` to allow set offset in mongo IP reservation
 
