@@ -2,7 +2,7 @@
 
 All notable changes are documented in this file.
 
-## v1.4.0
+## v1.3.3
 ### Added
 - Added parameter `postgres_database_flags` with default `password_encryption` as `scram-sha-256`
 
