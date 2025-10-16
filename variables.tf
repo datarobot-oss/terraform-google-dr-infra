@@ -346,7 +346,14 @@ variable "postgres_deletion_protection" {
   default     = false
 }
 
-
+variable "postgres_database_flags" {
+  description = "The database flags for the Cloud SQL instance."
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = [{ name = "password_encryption", value = "scram-sha-256" }]
+}
 ################################################################################
 # Redis
 ################################################################################

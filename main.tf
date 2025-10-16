@@ -360,6 +360,8 @@ module "postgres" {
     retention_unit                 = "COUNT"
   }
 
+  database_flags = var.postgres_database_flags
+
   user_labels = var.tags
 
   depends_on = [google_service_networking_connection.this[0]]

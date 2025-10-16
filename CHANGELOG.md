@@ -2,6 +2,10 @@
 
 All notable changes are documented in this file.
 
+## v1.3.3
+### Added
+- Added parameter `postgres_database_flags` with default `password_encryption` as `scram-sha-256`
+
 ## v1.3.2
 ### Added
 - `mongodb_network_reservation_ip_offset` to allow set offset in mongo IP reservation
