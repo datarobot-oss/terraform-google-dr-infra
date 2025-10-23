@@ -3,7 +3,7 @@
 All notable changes are documented in this file.
 
 ## v1.3.4
-### Added
+### Updated
 - Do not create `google_storage_bucket_iam_member` when `existing_gcs_bucket_name` is defined
 
 ## v1.3.3
