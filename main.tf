@@ -288,7 +288,7 @@ module "app_identity" {
 }
 
 resource "google_storage_bucket_iam_member" "datarobot" {
-  count = var.create_app_identity ? 1 : 0
+  count = var.create_app_identity && var.existing_gcs_bucket_name == null ? 1 : 0
 
   bucket = local.storage_bucket_name
   role   = "roles/storage.admin"
