@@ -6,7 +6,6 @@ Guidelines for developing and contributing to this project.
 
 - [DataRobot OSS Fleet Management](https://github.com/orgs/datarobot-oss/teams/fleet-management)
 
-
 ## Opening new issues
 
 - Before opening a new issue check if there are any existing FAQ entries (if one exists), issues or pull requests that match your case
@@ -29,3 +28,11 @@ open issues as soon as possible.
 
 If you don't get a response within sevent days of creating your issue or
 pull request, please send us an email at oss-community-management@datarobot.com
+
+## Opening a PR
+
+This project uses [pre-commit-terraform](https://github.com/antonbabenko/pre-commit-terraform) to check formatting, syntax, and keep the [README.md](./README.md) updated. To use it, [pre-commit must be installed](https://pre-commit.com/#installation).
+
+## Releases
+
+New releases are generated automatically on pushes to the `main` branch using [semantic-release](https://github.com/semantic-release/semantic-release). Commit messages are analyzed and release notes generated using [conventionalcommits](https://www.conventionalcommits.org).
