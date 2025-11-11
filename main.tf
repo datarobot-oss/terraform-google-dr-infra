@@ -472,6 +472,35 @@ module "mongodb" {
   tags                               = var.tags
 }
 
+################################################################################
+# Private Link Service
+################################################################################
+
+data "google_compute_subnetwork" "existing_ingress_psc" {
+  count = var.existing_ingress_pcs_subnet_name != null ? 1 : 0
+
+  project = var.google_project_id
+  name    = var.existing_ingress_pcs_subnet_name
+  region  = var.region
+}
+
+locals {
+  ingress_psc_subnet = try(data.google_compute_subnetwork.existing_ingress_psc[0], module.network[0].subnets["${var.region}/${local.ingress_psc_subnet_name}"], null)
+}
+
+module "private_link_service" {
+  source = "./modules/private-link-service"
+  count  = var.create_ingress_psc ? 1 : 0
+
+  namespace        = var.ingress_nginx_namespace
+  create_namespace = var.create_ingress_psc_namespace
+
+  ingress_psc_connection_preference        = length(var.ingress_psc_consumer_projects) > 0 ? "ACCEPT_MANUAL" : "ACCEPT_AUTOMATIC"
+  ingress_psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
+  psc_nat_subnets                          = [local.ingress_psc_subnet.name]
+
+  depends_on = [local.gke_cluster_name]
+}
 
 ################################################################################
 # Helm Charts
@@ -492,19 +521,6 @@ provider "kubectl" {
   load_config_file       = false
 }
 
-
-data "google_compute_subnetwork" "existing_ingress_psc" {
-  count = var.existing_ingress_pcs_subnet_name != null ? 1 : 0
-
-  project = var.google_project_id
-  name    = var.existing_ingress_pcs_subnet_name
-  region  = var.region
-}
-
-locals {
-  ingress_psc_subnet = try(data.google_compute_subnetwork.existing_ingress_psc[0], module.network[0].subnets["${var.region}/${local.ingress_psc_subnet_name}"], null)
-}
-
 module "ingress_nginx" {
   source = "./modules/ingress-nginx"
   count  = var.install_helm_charts && var.ingress_nginx ? 1 : 0
@@ -514,11 +530,6 @@ module "ingress_nginx" {
   namespace                  = var.ingress_nginx_namespace
   custom_values_templatefile = var.ingress_nginx_values
   custom_values_variables    = var.ingress_nginx_variables
-
-  create_psc                       = var.create_ingress_psc
-  psc_connection_preference        = length(var.ingress_psc_consumer_projects) > 0 ? "ACCEPT_MANUAL" : "ACCEPT_AUTOMATIC"
-  psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
-  psc_nat_subnets                  = [local.ingress_psc_subnet.name]
 
   depends_on = [local.gke_cluster_name]
 }

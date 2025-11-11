@@ -541,12 +541,6 @@ variable "ingress_psc_subnet_cidr" {
   default     = null
 }
 
-variable "ingress_psc_consumer_projects" {
-  description = "The list of consumer project IDs that are allowed to connect to the ServiceAttachment. This field can only be used when connectionPreference is ACCEPT_MANUAL."
-  type        = list(string)
-  default     = []
-}
-
 variable "cert_manager" {
   description = "Install the cert-manager helm chart. All other cert_manager variables are ignored if this variable is false."
   type        = bool
@@ -653,4 +647,20 @@ variable "descheduler_variables" {
   description = "Variables passed to the descheduler templatefile"
   type        = any
   default     = {}
+}
+
+################################################################################
+# Privaete Link Service
+################################################################################
+
+variable "ingress_psc_consumer_projects" {
+  description = "The list of consumer project IDs that are allowed to connect to the ServiceAttachment. This field can only be used when connectionPreference is ACCEPT_MANUAL."
+  type        = list(string)
+  default     = []
+}
+
+variable "create_ingress_psc_namespace" {
+  description = "Whether to create a namespace for the ingress private service connect"
+  type        = bool
+  default     = false
 }
