@@ -523,12 +523,6 @@ variable "ingress_nginx_variables" {
   default     = {}
 }
 
-variable "existing_ingress_pcs_subnet_name" {
-  description = "Name of an existing subnet to use for the Private Service Connection used by the ingress-nginx controller. Required when an existing_vpc_name is specified and create_ingress_psc is true. Ignored if no existing_vpc_name is specified or create_ingress_psc is false."
-  type        = string
-  default     = null
-}
-
 variable "ingress_psc_subnet_cidr" {
   description = "CIDR range to use for the Private Service Connection used by the ingress-nginx controller. Only used when `create_network` is `true` and an `existing_vpc_name` is not specified."
   type        = string
@@ -662,4 +656,10 @@ variable "create_ingress_psc_namespace" {
   description = "Whether to create a namespace for the ingress private service connect"
   type        = bool
   default     = false
+}
+
+variable "existing_ingress_pcs_subnet_name" {
+  description = "Name of an existing subnet to use for the Private Service Connection used by the ingress-nginx controller. Required when an existing_vpc_name is specified and create_ingress_psc is true. Ignored if no existing_vpc_name is specified or create_ingress_psc is false."
+  type        = string
+  default     = null
 }
