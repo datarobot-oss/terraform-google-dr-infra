@@ -3,19 +3,10 @@ variable "internet_facing_ingress_lb" {
   type        = bool
 }
 
-variable "namespace" {
-  description = "Namespace to install the helm chart into"
+variable "values_overrides" {
+  description = "Values in raw yaml format to pass to helm."
   type        = string
-}
-
-variable "custom_values_templatefile" {
-  description = "Custom values templatefile to pass to the helm chart"
-  type        = string
-}
-
-variable "custom_values_variables" {
-  description = "Variables for the custom values templatefile"
-  type        = any
+  default     = null
 }
 
 variable "create_psc" {

@@ -505,22 +505,10 @@ variable "ingress_nginx" {
   default     = true
 }
 
-variable "ingress_nginx_namespace" {
-  description = "Namespace to install the helm chart into"
+variable "ingress_nginx_values_overrides" {
+  description = "Values in raw yaml format to pass to helm."
   type        = string
-  default     = "ingress-nginx"
-}
-
-variable "ingress_nginx_values" {
-  description = "Path to templatefile containing custom values for the ingress-nginx helm chart"
-  type        = string
-  default     = ""
-}
-
-variable "ingress_nginx_variables" {
-  description = "Variables passed to the ingress_nginx_values templatefile"
-  type        = any
-  default     = {}
+  default     = null
 }
 
 variable "create_ingress_psc" {
@@ -553,12 +541,6 @@ variable "cert_manager" {
   default     = true
 }
 
-variable "cert_manager_namespace" {
-  description = "Namespace to install the helm chart into"
-  type        = string
-  default     = "cert-manager"
-}
-
 variable "cert_manager_letsencrypt_clusterissuers" {
   description = "Whether to create letsencrypt-prod and letsencrypt-staging ClusterIssuers"
   type        = bool
@@ -571,16 +553,10 @@ variable "cert_manager_letsencrypt_email_address" {
   default     = "user@example.com"
 }
 
-variable "cert_manager_values" {
-  description = "Path to templatefile containing custom values for the cert-manager helm chart"
+variable "cert_manager_values_overrides" {
+  description = "Values in raw yaml format to pass to helm."
   type        = string
-  default     = ""
-}
-
-variable "cert_manager_variables" {
-  description = "Variables passed to the cert_manager_values templatefile"
-  type        = any
-  default     = {}
+  default     = null
 }
 
 variable "external_dns" {
@@ -589,22 +565,10 @@ variable "external_dns" {
   default     = true
 }
 
-variable "external_dns_namespace" {
-  description = "Namespace to install the helm chart into"
+variable "external_dns_values_overrides" {
+  description = "Values in raw yaml format to pass to helm."
   type        = string
-  default     = "external-dns"
-}
-
-variable "external_dns_values" {
-  description = "Path to templatefile containing custom values for the external-dns helm chart"
-  type        = string
-  default     = ""
-}
-
-variable "external_dns_variables" {
-  description = "Variables passed to the external_dns_values templatefile"
-  type        = any
-  default     = {}
+  default     = null
 }
 
 variable "nvidia_device_plugin" {
@@ -613,22 +577,10 @@ variable "nvidia_device_plugin" {
   default     = true
 }
 
-variable "nvidia_device_plugin_namespace" {
-  description = "Namespace to install the helm chart into"
+variable "nvidia_device_plugin_values_overrides" {
+  description = "Values in raw yaml format to pass to helm."
   type        = string
-  default     = "nvidia-device-plugin"
-}
-
-variable "nvidia_device_plugin_values" {
-  description = "Path to templatefile containing custom values for the nvidia-device-plugin helm chart"
-  type        = string
-  default     = ""
-}
-
-variable "nvidia_device_plugin_variables" {
-  description = "Variables passed to the nvidia_device_plugin_values templatefile"
-  type        = any
-  default     = {}
+  default     = null
 }
 
 variable "descheduler" {
@@ -637,20 +589,8 @@ variable "descheduler" {
   default     = true
 }
 
-variable "descheduler_namespace" {
-  description = "Namespace to install the helm chart into"
+variable "descheduler_values_overrides" {
+  description = "Values in raw yaml format to pass to helm."
   type        = string
-  default     = "kube-system"
-}
-
-variable "descheduler_values" {
-  description = "Path to templatefile containing custom values for the descheduler helm chart"
-  type        = string
-  default     = ""
-}
-
-variable "descheduler_variables" {
-  description = "Variables passed to the descheduler templatefile"
-  type        = any
-  default     = {}
+  default     = null
 }

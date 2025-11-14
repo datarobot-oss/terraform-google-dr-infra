@@ -1,10 +1,9 @@
-provider: google
 domainFilters:
 - ${domain}
 sources:
 - ingress
-policy: sync
 txtOwnerId: ${clusterName}
+provider: google
 google:
   project: ${projectId}
   zoneVisibility: ${zoneVisibility}

@@ -1,14 +1,19 @@
-resource "helm_release" "nvidia_device_plugin" {
-  name       = "nvidia-device-plugin"
-  namespace  = var.namespace
+locals {
+  name      = "nvidia-device-plugin"
+  namespace = "nvidia-device-plugin"
+}
+
+resource "helm_release" "this" {
+  name       = local.name
+  namespace  = local.namespace
   repository = "https://nvidia.github.io/k8s-device-plugin"
-  chart      = "nvidia-device-plugin"
+  chart      = local.name
   version    = "v0.17.0"
 
   create_namespace = true
 
   values = [
-    templatefile("${path.module}/values.yaml", {}),
-    var.custom_values_templatefile != "" ? templatefile(var.custom_values_templatefile, var.custom_values_variables) : ""
+    file("${path.module}/values.yaml"),
+    var.values_overrides
   ]
 }

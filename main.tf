@@ -509,12 +509,8 @@ module "ingress_nginx" {
   source = "./modules/ingress-nginx"
   count  = var.install_helm_charts && var.ingress_nginx ? 1 : 0
 
-  internet_facing_ingress_lb = var.internet_facing_ingress_lb
-
-  namespace                  = var.ingress_nginx_namespace
-  custom_values_templatefile = var.ingress_nginx_values
-  custom_values_variables    = var.ingress_nginx_variables
-
+  internet_facing_ingress_lb       = var.internet_facing_ingress_lb
+  values_overrides                 = var.ingress_nginx_values_overrides
   create_psc                       = var.create_ingress_psc
   psc_connection_preference        = length(var.ingress_psc_consumer_projects) > 0 ? "ACCEPT_MANUAL" : "ACCEPT_AUTOMATIC"
   psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
@@ -534,10 +530,7 @@ module "cert_manager" {
   dns_zone_name              = local.public_dns_zone_name
   letsencrypt_clusterissuers = var.cert_manager_letsencrypt_clusterissuers
   email_address              = var.cert_manager_letsencrypt_email_address
-
-  namespace                  = var.cert_manager_namespace
-  custom_values_templatefile = var.cert_manager_values
-  custom_values_variables    = var.cert_manager_variables
+  values_overrides           = var.cert_manager_values_overrides
 
   depends_on = [local.gke_cluster_name]
 }
@@ -554,10 +547,7 @@ module "external_dns" {
   dns_zone_name    = var.internet_facing_ingress_lb ? local.public_dns_zone_name : local.private_dns_zone_name
   gke_cluster_name = local.gke_cluster_name
   zone_visibility  = var.internet_facing_ingress_lb ? "public" : "private"
-
-  namespace                  = var.external_dns_namespace
-  custom_values_templatefile = var.external_dns_values
-  custom_values_variables    = var.external_dns_variables
+  values_overrides = var.external_dns_values_overrides
 }
 
 
@@ -565,9 +555,7 @@ module "nvidia_device_plugin" {
   source = "./modules/nvidia-device-plugin"
   count  = var.install_helm_charts && var.nvidia_device_plugin ? 1 : 0
 
-  namespace                  = var.nvidia_device_plugin_namespace
-  custom_values_templatefile = var.nvidia_device_plugin_values
-  custom_values_variables    = var.nvidia_device_plugin_variables
+  values_overrides = var.nvidia_device_plugin_values_overrides
 
   depends_on = [local.gke_cluster_name]
 }
@@ -576,9 +564,7 @@ module "descheduler" {
   source = "./modules/descheduler"
   count  = var.install_helm_charts && var.descheduler ? 1 : 0
 
-  namespace                  = var.descheduler_namespace
-  custom_values_templatefile = var.descheduler_values
-  custom_values_variables    = var.descheduler_variables
+  values_overrides = var.descheduler_values_overrides
 
   depends_on = [local.gke_cluster_name]
 }
