@@ -155,7 +155,6 @@ module "datarobot_infra" {
   # ingress-nginx
   ################################################################################
   ingress_nginx                 = true
-  ingress_nginx_namespace       = "ingress-nginx"
   internet_facing_ingress_lb    = true
   create_ingress_psc            = true
   ingress_psc_consumer_projects = ["your-google-project-id"]
@@ -163,42 +162,33 @@ module "datarobot_infra" {
   # in this case our custom values file override is formatted as a templatefile
   # so we can pass variables like our provisioner_public_ip to it.
   # https://developer.hashicorp.com/terraform/language/functions/templatefile
-  ingress_nginx_values = "${path.module}/templates/custom_ingress_nginx_values.tftpl"
-  ingress_nginx_variables = {
+  ingress_nginx_values_overrides = templatefile("${path.module}/templates/custom_ingress_nginx_values.tftpl", {
     lb_source_ranges = ["${local.provisioner_public_ip}/32"]
-  }
+  })
 
   ################################################################################
   # cert-manager
   ################################################################################
   cert_manager                            = true
-  cert_manager_namespace                  = "cert-manager"
   cert_manager_letsencrypt_clusterissuers = true
   cert_manager_letsencrypt_email_address  = "youremail@yourdomain.com"
-  cert_manager_values                     = "${path.module}/templates/custom_cert_manager_values.yaml"
-  cert_manager_variables                  = {}
+  cert_manager_values_overrides           = file("${path.module}/templates/custom_cert_manager_values.yaml")
 
   ################################################################################
   # external-dns
   ################################################################################
-  external_dns           = true
-  external_dns_namespace = "external-dns"
-  external_dns_values    = "${path.module}/templates/custom_external_dns_values.yaml"
-  external_dns_variables = {}
+  external_dns                  = true
+  external_dns_values_overrides = file("${path.module}/templates/custom_external_dns_values.yaml")
 
   ################################################################################
   # nvidia-device-plugin
   ################################################################################
-  nvidia_device_plugin           = true
-  nvidia_device_plugin_namespace = "nvidia-device-plugin"
-  nvidia_device_plugin_values    = "${path.module}/templates/custom_nvidia_device_plugin_values.yaml"
-  nvidia_device_plugin_variables = {}
+  nvidia_device_plugin                  = true
+  nvidia_device_plugin_values_overrides = file("${path.module}/templates/custom_nvidia_device_plugin_values.yaml")
 
   ################################################################################
   # descheduler
   ################################################################################
-  descheduler           = true
-  descheduler_namespace = "kube-system"
-  descheduler_values    = "${path.module}/templates/custom_descheduler_values.yaml"
-  descheduler_variables = {}
+  descheduler                  = true
+  descheduler_values_overrides = file("${path.module}/templates/custom_descheduler_values.yaml")
 }

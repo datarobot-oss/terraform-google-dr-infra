@@ -1,3 +1,6 @@
+locals {
+  namespace = "ingress-nginx"
+}
 
 resource "kubectl_manifest" "internal_ingress_psc" {
   yaml_body = yamlencode({
@@ -5,7 +8,7 @@ resource "kubectl_manifest" "internal_ingress_psc" {
     kind       = "ServiceAttachment"
     metadata = {
       name      = "datarobot-internal-ingress-psc"
-      namespace = var.namespace
+      namespace = local.namespace
     }
     spec = {
       connectionPreference = var.ingress_psc_connection_preference
@@ -28,7 +31,7 @@ resource "kubectl_manifest" "namespace" {
     apiVersion = "v1"
     kind       = "Namespace"
     metadata = {
-      name = var.namespace
+      name = local.namespace
     }
   })
 }

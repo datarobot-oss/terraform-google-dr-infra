@@ -1,8 +1,3 @@
-variable "namespace" {
-  description = "Namespace to install the ServiceAttachment"
-  type        = string
-}
-
 variable "create_namespace" {
   description = "Whether to create the namespace for the ServiceAttachment"
   type        = bool

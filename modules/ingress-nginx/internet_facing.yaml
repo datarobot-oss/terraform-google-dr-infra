@@ -1,7 +1,0 @@
-controller:
-  service:
-    externalTrafficPolicy: Local
-    external:
-      enabled: true
-    internal:
-      enabled: false
