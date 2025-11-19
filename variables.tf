@@ -511,28 +511,10 @@ variable "ingress_nginx_values_overrides" {
   default     = null
 }
 
-variable "create_ingress_psc" {
-  description = "Expose the internal LB created by the ingress-nginx controller as a Google Private Service Connection. Only applies if internet_facing_ingress_lb is false."
-  type        = bool
-  default     = false
-}
-
-variable "existing_ingress_pcs_subnet_name" {
-  description = "Name of an existing subnet to use for the Private Service Connection used by the ingress-nginx controller. Required when an existing_vpc_name is specified and create_ingress_psc is true. Ignored if no existing_vpc_name is specified or create_ingress_psc is false."
-  type        = string
-  default     = null
-}
-
 variable "ingress_psc_subnet_cidr" {
   description = "CIDR range to use for the Private Service Connection used by the ingress-nginx controller. Only used when `create_network` is `true` and an `existing_vpc_name` is not specified."
   type        = string
   default     = null
-}
-
-variable "ingress_psc_consumer_projects" {
-  description = "The list of consumer project IDs that are allowed to connect to the ServiceAttachment. This field can only be used when connectionPreference is ACCEPT_MANUAL."
-  type        = list(string)
-  default     = []
 }
 
 variable "cert_manager" {
@@ -591,6 +573,33 @@ variable "descheduler" {
 
 variable "descheduler_values_overrides" {
   description = "Values in raw yaml format to pass to helm."
+  type        = string
+  default     = null
+}
+
+################################################################################
+# Privaete Link Service
+################################################################################
+variable "create_ingress_psc" {
+  description = "Expose the internal LB created by the ingress-nginx controller as a Google Private Service Connection. Only applies if internet_facing_ingress_lb is false."
+  type        = bool
+  default     = false
+}
+
+variable "ingress_psc_consumer_projects" {
+  description = "The list of consumer project IDs that are allowed to connect to the ServiceAttachment. This field can only be used when connectionPreference is ACCEPT_MANUAL."
+  type        = list(string)
+  default     = []
+}
+
+variable "create_ingress_psc_namespace" {
+  description = "Whether to create a namespace for the ingress private service connect"
+  type        = bool
+  default     = false
+}
+
+variable "existing_ingress_pcs_subnet_name" {
+  description = "Name of an existing subnet to use for the Private Service Connection used by the ingress-nginx controller. Required when an existing_vpc_name is specified and create_ingress_psc is true. Ignored if no existing_vpc_name is specified or create_ingress_psc is false."
   type        = string
   default     = null
 }
