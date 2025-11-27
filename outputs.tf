@@ -27,6 +27,17 @@ output "public_dns_zone_name_servers" {
   value       = try(module.public_dns[0].name_servers, null)
 }
 
+output "public_zone_name" {
+  description = "Name of the public zone"
+  value       = try(module.public_dns[0].name, null)
+}
+
+output "private_zone_name" {
+  description = "Name of the private zone"
+  value       = try(module.private_dns[0].name, null)
+}
+
+
 ################################################################################
 # Storage
 ################################################################################
