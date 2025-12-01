@@ -103,12 +103,17 @@ module "cloud_router" {
 ################################################################################
 # DNS
 ################################################################################
+data "google_dns_managed_zone" "existing_public_dns_zone" {
+  count = var.existing_public_dns_zone_name != null ? 1 : 0
+  name  = var.existing_public_dns_zone_name
+}
 
 locals {
   # create a public zone if we're using external_dns with internet_facing LB
   # or we're using cert_manager with letsencrypt clusterissuers
-  create_public_dns_zone = var.create_dns_zones && var.existing_public_dns_zone_name == null && ((var.external_dns && var.internet_facing_ingress_lb) || (var.cert_manager && var.cert_manager_letsencrypt_clusterissuers))
-  public_dns_zone_name   = local.create_public_dns_zone ? module.public_dns[0].name : var.existing_public_dns_zone_name
+  create_public_dns_zone   = var.create_dns_zones && var.existing_public_dns_zone_name == null && ((var.external_dns && var.internet_facing_ingress_lb) || (var.cert_manager && var.cert_manager_letsencrypt_clusterissuers))
+  public_dns_zone_name     = local.create_public_dns_zone ? module.public_dns[0].name : var.existing_public_dns_zone_name
+  public_zone_name_servers = try(data.google_dns_managed_zone.existing_public_dns_zone[0].name_servers, module.public_dns[0].name_servers, null)
 
   # create a private zone if we're using external_dns with an internal LB
   create_private_dns_zone = var.create_dns_zones && var.existing_private_dns_zone_name == null && (var.external_dns && !var.internet_facing_ingress_lb)
