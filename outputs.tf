@@ -24,7 +24,7 @@ output "private_dns_zone_name" {
 
 output "public_dns_zone_name_servers" {
   description = "Name servers of the public DNS zone"
-  value       = try(local.public_zone_name_servers, null)
+  value       = local.public_zone_name_servers
 }
 
 ################################################################################
