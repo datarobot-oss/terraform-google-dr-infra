@@ -109,21 +109,15 @@ data "google_dns_managed_zone" "existing_public_dns_zone" {
 }
 
 locals {
-  # create a public zone if we're using external_dns with internet_facing LB
-  # or we're using cert_manager with letsencrypt clusterissuers
-  create_public_dns_zone   = var.create_dns_zones && var.existing_public_dns_zone_name == null && ((var.external_dns && var.internet_facing_ingress_lb) || (var.cert_manager && var.cert_manager_letsencrypt_clusterissuers))
-  public_dns_zone_name     = local.create_public_dns_zone ? module.public_dns[0].name : var.existing_public_dns_zone_name
+  public_dns_zone_name     = var.existing_public_dns_zone_name != null ? var.existing_public_dns_zone_name : try(module.public_dns[0].name, null)
   public_zone_name_servers = try(data.google_dns_managed_zone.existing_public_dns_zone[0].name_servers, module.public_dns[0].name_servers, null)
-
-  # create a private zone if we're using external_dns with an internal LB
-  create_private_dns_zone = var.create_dns_zones && var.existing_private_dns_zone_name == null && (var.external_dns && !var.internet_facing_ingress_lb)
-  private_dns_zone_name   = local.create_private_dns_zone ? module.private_dns[0].name : var.existing_private_dns_zone_name
+  private_dns_zone_name    = var.existing_private_dns_zone_name != null ? var.existing_private_dns_zone_name : try(module.private_dns[0].name, null)
 }
 
 module "public_dns" {
   source  = "terraform-google-modules/cloud-dns/google"
   version = "~> 5.0"
-  count   = local.create_public_dns_zone ? 1 : 0
+  count   = var.existing_public_dns_zone_name == null && var.create_dns_zones ? 1 : 0
 
   project_id    = var.google_project_id
   type          = "public"
@@ -137,7 +131,7 @@ module "public_dns" {
 module "private_dns" {
   source  = "terraform-google-modules/cloud-dns/google"
   version = "~> 5.0"
-  count   = local.create_private_dns_zone ? 1 : 0
+  count   = var.existing_private_dns_zone_name == null && var.create_dns_zones ? 1 : 0
 
   project_id                         = var.google_project_id
   type                               = "private"

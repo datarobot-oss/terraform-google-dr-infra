@@ -14,12 +14,12 @@ output "vpc_name" {
 
 output "public_dns_zone_name" {
   description = "Name of the public DNS zone"
-  value       = try(module.public_dns[0].name, null)
+  value       = local.public_dns_zone_name
 }
 
 output "private_dns_zone_name" {
   description = "Name of the private DNS zone"
-  value       = try(module.private_dns[0].name, null)
+  value       = local.private_dns_zone_name
 }
 
 output "public_dns_zone_name_servers" {
