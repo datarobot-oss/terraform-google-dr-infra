@@ -26,3 +26,8 @@ variable "psc_nat_subnets" {
   type        = list(string)
   default     = []
 }
+
+variable "ingress_service_name" {
+  description = "The name of the ingress service to attach the private link to."
+  type        = string
+}

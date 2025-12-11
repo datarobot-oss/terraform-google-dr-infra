@@ -17,7 +17,7 @@ resource "kubectl_manifest" "internal_ingress_psc" {
       proxyProtocol        = false
       resourceRef = {
         kind = "Service"
-        name = "ingress-nginx-controller-internal"
+        name = var.ingress_service_name
       }
     }
   })
