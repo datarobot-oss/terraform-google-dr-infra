@@ -497,6 +497,8 @@ module "private_link_service" {
   ingress_psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
   psc_nat_subnets                          = [local.ingress_psc_subnet.name]
 
+  ingress_service_name = var.ingress_service_name
+
   depends_on = [local.gke_cluster_name, module.ingress_nginx]
 }
 
