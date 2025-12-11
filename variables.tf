@@ -607,5 +607,5 @@ variable "existing_ingress_pcs_subnet_name" {
 variable "ingress_service_name" {
   description = "The name of the ingress service to attach the private link to."
   type        = string
-  default     = "ingress-nginx-controller-internal"
+  default     = "ingress-nginx-controller"
 }
