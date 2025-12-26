@@ -581,3 +581,27 @@ module "descheduler" {
 
   depends_on = [local.gke_cluster_name]
 }
+
+################################################################################
+# Custom Private Endpoints
+################################################################################
+
+module "custom_endpoints" {
+  source = "./modules/custom-private-endpoints"
+
+  for_each = {
+    for ep in var.custom_private_endpoints : ep.service_name => ep
+  }
+
+  google_project_id = var.google_project_id
+  region            = var.region
+  name              = var.name
+
+  vpc_name                = local.vpc_name
+  subnet                  = local.kubernetes_nodes_subnet.name
+  allow_psc_global_access = var.allow_psc_global_access
+
+  endpoint_config = each.value
+
+  labels = var.tags
+}
