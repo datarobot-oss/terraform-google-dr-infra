@@ -30,7 +30,7 @@ resource "google_compute_forwarding_rule" "this" {
 
 resource "google_dns_managed_zone" "this" {
   count       = var.endpoint_config.private_dns_zone != "" ? 1 : 0
-  name        = var.endpoint_config.private_dns_zone
+  name        = replace(var.endpoint_config.private_dns_zone, ".", "-")
   dns_name    = "${var.endpoint_config.private_dns_zone}."
   project     = var.google_project_id
   description = "Private DNS zone for PSC endpoint ${var.endpoint_config.private_dns_name}"
