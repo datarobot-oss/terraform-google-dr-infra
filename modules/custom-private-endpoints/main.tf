@@ -39,7 +39,7 @@ resource "google_dns_managed_zone" "this" {
 
   private_visibility_config {
     networks {
-      network_url = var.vpc_name
+      network_url = var.vpc_url
     }
   }
 

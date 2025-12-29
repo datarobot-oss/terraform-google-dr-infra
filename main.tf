@@ -598,6 +598,7 @@ module "custom_endpoints" {
   name              = var.name
 
   vpc_name                = local.vpc_name
+  vpc_url                 = local.vpc_self_link
   subnet                  = local.kubernetes_nodes_subnet.name
   allow_psc_global_access = var.allow_psc_global_access
 

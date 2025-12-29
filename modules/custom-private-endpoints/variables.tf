@@ -18,6 +18,11 @@ variable "vpc_name" {
   type        = string
 }
 
+variable "vpc_url" {
+  description = "Self link of the VPC"
+  type        = string
+}
+
 variable "subnet" {
   description = "subnet which will host the private endpoint ip"
   type        = string
