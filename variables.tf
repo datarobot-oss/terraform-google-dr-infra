@@ -609,3 +609,23 @@ variable "ingress_service_name" {
   type        = string
   default     = "ingress-nginx-controller"
 }
+
+#################################################################################
+# Custom Private Endpoints
+#################################################################################
+
+variable "custom_private_endpoints" {
+  description = "Configuration for the specific endpoint"
+  type = list(object({
+    service_name     = string
+    private_dns_zone = optional(string, "")
+    private_dns_name = optional(string, "")
+  }))
+  default = []
+}
+
+variable "allow_psc_global_access" {
+  description = "Whether to allow global access for Private Service Connect"
+  type        = bool
+  default     = false
+}
