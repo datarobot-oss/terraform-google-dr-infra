@@ -606,3 +606,18 @@ module "custom_endpoints" {
 
   labels = var.tags
 }
+
+################################################################################
+# Observability
+################################################################################
+
+module "observability" {
+  source = "./modules/observability"
+  count  = var.create_observability ? 1 : 0
+
+  name = var.name
+  project_id = var.google_project_id
+  namespace = var.datarobot_namespace
+
+  tags = var.tags
+}
