@@ -629,3 +629,13 @@ variable "allow_psc_global_access" {
   type        = bool
   default     = false
 }
+
+################################################################################
+# Observability
+################################################################################
+
+variable "create_observability" {
+  description = "Whether to provision observability resources"
+  type        = bool
+  default     = false
+}
