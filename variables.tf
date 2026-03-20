@@ -156,6 +156,12 @@ variable "create_container_registry" {
   default     = true
 }
 
+variable "gcr_registry_name" {
+  description = "Name of the Artifact Registry repository. Defaults to the name if not specified."
+  type        = string
+  default     = null
+}
+
 
 ################################################################################
 # Kubernetes
