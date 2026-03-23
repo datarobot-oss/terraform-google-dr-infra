@@ -184,8 +184,8 @@ resource "google_artifact_registry_repository" "this" {
   project  = var.google_project_id
   location = var.region
 
-  repository_id = var.name
-  description   = "${var.name} container registry"
+  repository_id = coalesce(var.gcr_registry_name, var.name)
+  description   = "${coalesce(var.gcr_registry_name, var.name)} container registry"
   format        = "DOCKER"
 
   labels = var.tags
@@ -615,9 +615,7 @@ module "observability" {
   source = "./modules/observability"
   count  = var.create_observability ? 1 : 0
 
-  name = var.name
+  name       = var.name
   project_id = var.google_project_id
-  namespace = var.datarobot_namespace
-
-  tags = var.tags
+  namespace  = var.datarobot_namespace
 }
