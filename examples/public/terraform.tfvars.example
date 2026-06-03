@@ -1,0 +1,12 @@
+# Copy this file to terraform.tfvars and fill in the values before running terraform apply.
+
+name              = "datarobot"
+environment       = "dev" # must be one of: dev, staging, prod
+google_project_id = "your-google-project-id"
+region            = "us-west1"
+domain_name       = "datarobot.example.com"
+email_address     = "you@example.com"
+
+tags = {
+  managed-by = "terraform"
+}

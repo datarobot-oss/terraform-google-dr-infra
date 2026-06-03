@@ -9,59 +9,36 @@ module "datarobot_infra" {
   name              = "datarobot"
   google_project_id = "your-google-project-id"
   region            = "us-west1"
-  domain_name       = "yourdomain.com"
+  domain_name       = "datarobot.example.com"
 
-  create_network                     = true
-  network_address_space              = "10.7.0.0/16"
-  create_dns_zones                   = false
-  existing_public_dns_zone_name      = "existing-public-dns-zone-name"
-  create_storage                     = true
-  create_container_registry          = false
-  existing_artifact_registry_repo_id = "projects/your-google-project-id/locations/us-west1/repositories/existing-repository-name"
-  create_kubernetes_cluster          = true
-  create_app_identity                = true
-  create_postgres                    = true
-  create_redis                       = true
-  create_mongodb                     = true
-
-  ingress_nginx                           = true
-  internet_facing_ingress_lb              = true
-  cert_manager                            = true
-  cert_manager_letsencrypt_clusterissuers = true
-  cert_manager_letsencrypt_email_address  = youremail@yourdomain.com
-  external_dns                            = true
-  nvidia_device_plugin                    = true
-  descheduler                             = true
+  cert_manager_letsencrypt_email_address = "you@example.com"
 
   tags = {
-    application   = "datarobot"
-    environment   = "dev"
-    managed-by    = "terraform"
+    environment = "dev"
+    managed-by  = "terraform"
   }
 }
 ```
 
 ## Examples
-- [Complete](examples/complete) - Demonstrates all input variables
-- [Partial](examples/partial) - Demonstrates the use of existing resources
-- [Minimal](examples/minimal) - Demonstrates the minimum set of input variables needed to deploy all infrastructure
+- [Complete](examples/complete) - Demonstrates all available input variables.
+- [Public](examples/public) - Minimal configuration for a publicly accessible deployment (internet-facing load balancer, public GKE API endpoint).
+- [Private](examples/private) - Minimal configuration for a private deployment (internal load balancer, private-only GKE API endpoint, existing VPC).
 
 ### Using an example directly from source
 1. Clone the repo
 ```bash
 git clone https://github.com/datarobot-oss/terraform-google-dr-infra.git
 ```
-2. Change directories into the example that best suits your needs
+2. Change directories into the example that best aligns with your use-case.
 ```bash
-cd terraform-google-dr-infra/examples/internal
+cd terraform-google-dr-infra/examples/public
 ```
-3. Modify `main.tf` as needed
-4. Run terraform commands
+3. Modify `main.tf` to suit your specific use-case.
+4. Run terraform.
 ```bash
 terraform init
-terraform plan
 terraform apply
-terraform destroy
 ```
 
 ## Module Descriptions
@@ -84,15 +61,13 @@ TBD
 
 ### DNS
 #### Toggle
-- `create_dns_zones` to create new Google Cloud DNS zones
-- `existing_public_dns_zone_name` / `existing_private_dns_zone_name` to use existing Google Cloud DNS zones
+- `create_dns_zone` to create a new Google Cloud DNS managed zone
+- `existing_dns_zone_name` to use an existing Google Cloud DNS managed zone
 
 #### Description
-Create new public and/or private DNS zones with name `domain_name`.
+Creates a new Cloud DNS managed zone for `domain_name`. When `dns_zone_public` is `true` (the default) a public zone is created; when `false` a private zone is created for the given VPC.
 
-A public Cloud DNS zone is used by `external_dns` to create records for the DataRobot ingress resources when `internet_facing_ingress_lb` is `true`. It is also used for DNS validation when using `cert_manager` and `cert_manager_letsencrypt_clusterissuers`.
-
-A private Cloud DNS zone is used by `external_dns` to create records for the DataRobot ingress resources when `internet_facing_ingress_lb` is `false`.
+The Cloud DNS zone is used by `external_dns` to manage DNS records for the resources created by the DataRobot application. When the zone is public it is also used for DNS validation when using `cert_manager` and `cert_manager_letsencrypt_clusterissuers`.
 
 #### Permissions
 TBD
@@ -286,7 +261,7 @@ The default installation supports DataRobot versions >= 10.0.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.5 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.6.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.2 |
@@ -296,18 +271,19 @@ The default installation supports DataRobot versions >= 10.0.
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_google"></a> [google](#provider\_google) | >= 6.6.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_app_identity"></a> [app\_identity](#module\_app\_identity) | terraform-google-modules/service-accounts/google | ~> 4.0 |
 | <a name="module_cert_manager"></a> [cert\_manager](#module\_cert\_manager) | ./modules/cert-manager | n/a |
 | <a name="module_cloud_router"></a> [cloud\_router](#module\_cloud\_router) | terraform-google-modules/cloud-router/google | ~> 6.1 |
 | <a name="module_custom_endpoints"></a> [custom\_endpoints](#module\_custom\_endpoints) | ./modules/custom-private-endpoints | n/a |
 | <a name="module_descheduler"></a> [descheduler](#module\_descheduler) | ./modules/descheduler | n/a |
+| <a name="module_dns"></a> [dns](#module\_dns) | terraform-google-modules/cloud-dns/google | ~> 5.0 |
 | <a name="module_external_dns"></a> [external\_dns](#module\_external\_dns) | ./modules/external-dns | n/a |
 | <a name="module_ingress_nginx"></a> [ingress\_nginx](#module\_ingress\_nginx) | ./modules/ingress-nginx | n/a |
 | <a name="module_kubernetes"></a> [kubernetes](#module\_kubernetes) | terraform-google-modules/kubernetes-engine/google//modules/private-cluster | ~> 39.0 |
@@ -316,16 +292,14 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="module_nvidia_device_plugin"></a> [nvidia\_device\_plugin](#module\_nvidia\_device\_plugin) | ./modules/nvidia-device-plugin | n/a |
 | <a name="module_observability"></a> [observability](#module\_observability) | ./modules/observability | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | terraform-google-modules/sql-db/google//modules/postgresql | ~> 26.0 |
-| <a name="module_private_dns"></a> [private\_dns](#module\_private\_dns) | terraform-google-modules/cloud-dns/google | ~> 5.0 |
 | <a name="module_private_link_service"></a> [private\_link\_service](#module\_private\_link\_service) | ./modules/private-link-service | n/a |
-| <a name="module_public_dns"></a> [public\_dns](#module\_public\_dns) | terraform-google-modules/cloud-dns/google | ~> 5.0 |
 | <a name="module_redis"></a> [redis](#module\_redis) | terraform-google-modules/memorystore/google | ~> 15.0 |
 | <a name="module_storage"></a> [storage](#module\_storage) | terraform-google-modules/cloud-storage/google | ~> 8.0 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [google_artifact_registry_repository.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository) | resource |
 | [google_artifact_registry_repository_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository_iam_member) | resource |
 | [google_compute_global_address.postgres](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
@@ -339,20 +313,20 @@ The default installation supports DataRobot versions >= 10.0.
 | [google_compute_subnetwork.existing_kubernetes_nodes](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
 | [google_compute_subnetwork.existing_mongodb](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
 | [google_container_cluster.existing](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/container_cluster) | data source |
-| [google_dns_managed_zone.existing_public_dns_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/dns_managed_zone) | data source |
+| [google_dns_managed_zone.existing](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/dns_managed_zone) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_allow_psc_global_access"></a> [allow\_psc\_global\_access](#input\_allow\_psc\_global\_access) | Whether to allow global access for Private Service Connect | `bool` | `false` | no |
 | <a name="input_cert_manager"></a> [cert\_manager](#input\_cert\_manager) | Install the cert-manager helm chart. All other cert\_manager variables are ignored if this variable is false. | `bool` | `true` | no |
-| <a name="input_cert_manager_letsencrypt_clusterissuers"></a> [cert\_manager\_letsencrypt\_clusterissuers](#input\_cert\_manager\_letsencrypt\_clusterissuers) | Whether to create letsencrypt-prod and letsencrypt-staging ClusterIssuers | `bool` | `true` | no |
+| <a name="input_cert_manager_letsencrypt_clusterissuers"></a> [cert\_manager\_letsencrypt\_clusterissuers](#input\_cert\_manager\_letsencrypt\_clusterissuers) | Whether to create letsencrypt-prod and letsencrypt-staging ClusterIssuers. This will only work if the DNS zone is public. | `bool` | `true` | no |
 | <a name="input_cert_manager_letsencrypt_email_address"></a> [cert\_manager\_letsencrypt\_email\_address](#input\_cert\_manager\_letsencrypt\_email\_address) | Email address for the certificate owner. Let's Encrypt will use this to contact you about expiring certificates, and issues related to your account. Only required if cert\_manager\_letsencrypt\_clusterissuers is true. | `string` | `"user@example.com"` | no |
 | <a name="input_cert_manager_values_overrides"></a> [cert\_manager\_values\_overrides](#input\_cert\_manager\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
 | <a name="input_create_app_identity"></a> [create\_app\_identity](#input\_create\_app\_identity) | Create a new user assigned identity for the DataRobot application | `bool` | `true` | no |
 | <a name="input_create_container_registry"></a> [create\_container\_registry](#input\_create\_container\_registry) | Create a new Google Container Registry. Ignored if an existing existing\_artifact\_registry\_repo\_id is specified. | `bool` | `true` | no |
-| <a name="input_create_dns_zones"></a> [create\_dns\_zones](#input\_create\_dns\_zones) | Create DNS zones for domain\_name. Ignored if existing\_public\_dns\_zone\_id and existing\_private\_dns\_zone\_id are specified. | `bool` | `true` | no |
+| <a name="input_create_dns_zone"></a> [create\_dns\_zone](#input\_create\_dns\_zone) | Create a Cloud DNS managed zone for domain\_name. Ignored if existing\_dns\_zone\_name is specified. | `bool` | `true` | no |
 | <a name="input_create_ingress_psc"></a> [create\_ingress\_psc](#input\_create\_ingress\_psc) | Expose the internal LB created by the ingress-nginx controller as a Google Private Service Connection. Only applies if internet\_facing\_ingress\_lb is false. | `bool` | `false` | no |
 | <a name="input_create_ingress_psc_namespace"></a> [create\_ingress\_psc\_namespace](#input\_create\_ingress\_psc\_namespace) | Whether to create a namespace for the ingress private service connect | `bool` | `false` | no |
 | <a name="input_create_kubernetes_cluster"></a> [create\_kubernetes\_cluster](#input\_create\_kubernetes\_cluster) | Create a new Google Kubernetes Engine cluster. All kubernetes and helm chart variables are ignored if this variable is false. | `bool` | `true` | no |
@@ -367,20 +341,21 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_datarobot_service_accounts"></a> [datarobot\_service\_accounts](#input\_datarobot\_service\_accounts) | Kubernetes service accounts in the datarobot\_namespace to provide with Storage Blob Data Contributor and AcrPush access | `set(string)` | <pre>[<br/>  "datarobot-storage-sa",<br/>  "dynamic-worker",<br/>  "kubeworker-sa",<br/>  "prediction-server-sa",<br/>  "internal-api-sa",<br/>  "build-service",<br/>  "tileservergl-sa",<br/>  "nbx-notebook-revisions-account",<br/>  "buzok-account",<br/>  "exec-manager-qw",<br/>  "exec-manager-wrangling",<br/>  "lrs-job-manager",<br/>  "blob-view-service"<br/>]</pre> | no |
 | <a name="input_descheduler"></a> [descheduler](#input\_descheduler) | Install the descheduler helm chart to enable rescheduling of pods. All other descheduler variables are ignored if this variable is false | `bool` | `true` | no |
 | <a name="input_descheduler_values_overrides"></a> [descheduler\_values\_overrides](#input\_descheduler\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
-| <a name="input_dns_zones_force_destroy"></a> [dns\_zones\_force\_destroy](#input\_dns\_zones\_force\_destroy) | Force destroy for the public and private Cloud DNS zones when terminating | `bool` | `false` | no |
-| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Name of the domain to use for the DataRobot application. If create\_dns\_zones is true then zones will be created for this domain. It is also used by the cert-manager helm chart for DNS validation and as a domain filter by the external-dns helm chart. | `string` | `""` | no |
+| <a name="input_dns_zone_force_destroy"></a> [dns\_zone\_force\_destroy](#input\_dns\_zone\_force\_destroy) | Force destroy the Cloud DNS managed zone. Ignored if an existing\_dns\_zone\_name is specified or create\_dns\_zone is false. | `bool` | `false` | no |
+| <a name="input_dns_zone_public"></a> [dns\_zone\_public](#input\_dns\_zone\_public) | Create a public Cloud DNS managed zone. When `false`, a private zone will be created for the given VPC. | `bool` | `true` | no |
+| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Name of the domain to use for the DataRobot application. If create\_dns\_zone is true then a zone will be created for this domain. It is also used by the cert-manager helm chart for DNS validation and as a domain filter by the external-dns helm chart. | `string` | `""` | no |
 | <a name="input_existing_artifact_registry_repo_id"></a> [existing\_artifact\_registry\_repo\_id](#input\_existing\_artifact\_registry\_repo\_id) | ID of existing artifact registry repository to use | `string` | `null` | no |
+| <a name="input_existing_dns_zone_name"></a> [existing\_dns\_zone\_name](#input\_existing\_dns\_zone\_name) | Name of an existing Cloud DNS managed zone to use. When specified, all other DNS variables will be ignored. | `string` | `null` | no |
 | <a name="input_existing_gcs_bucket_name"></a> [existing\_gcs\_bucket\_name](#input\_existing\_gcs\_bucket\_name) | ID of existing Google Storage Bucket to use for DataRobot file storage. When specified, all other storage variables will be ignored. | `string` | `null` | no |
 | <a name="input_existing_gke_cluster_name"></a> [existing\_gke\_cluster\_name](#input\_existing\_gke\_cluster\_name) | Name of existing GKE cluster to use. When specified, all other kubernetes variables will be ignored. | `string` | `null` | no |
 | <a name="input_existing_ingress_pcs_subnet_name"></a> [existing\_ingress\_pcs\_subnet\_name](#input\_existing\_ingress\_pcs\_subnet\_name) | Name of an existing subnet to use for the Private Service Connection used by the ingress-nginx controller. Required when an existing\_vpc\_name is specified and create\_ingress\_psc is true. Ignored if no existing\_vpc\_name is specified or create\_ingress\_psc is false. | `string` | `null` | no |
 | <a name="input_existing_kubernetes_nodes_subnet"></a> [existing\_kubernetes\_nodes\_subnet](#input\_existing\_kubernetes\_nodes\_subnet) | Name of an existing subnet to use for the GKE node pools and control plane private endpoint. Required when `create_kubernetes_cluster` is `true` and an `existing_vpc_name` is specified. Ignored if no `existing_vpc_name` is specified. | `string` | `null` | no |
 | <a name="input_existing_kubernetes_pods_range_name"></a> [existing\_kubernetes\_pods\_range\_name](#input\_existing\_kubernetes\_pods\_range\_name) | Name of an secondary IP range within subnet defined by existing\_kubernetes\_nodes\_subnet\_name to use for the Kubernetes pods. Required when an existing\_vpc\_name is specified. Ignored if no existing\_vpc\_name is specified. | `string` | `null` | no |
 | <a name="input_existing_mongodb_subnet_name"></a> [existing\_mongodb\_subnet\_name](#input\_existing\_mongodb\_subnet\_name) | Name of an existing subnet to use for MongoDB Atlas VPC Peering. Required when an existing\_vpc\_name is specified. Ignored if no existing\_vpc\_name is specified. | `string` | `null` | no |
-| <a name="input_existing_private_dns_zone_name"></a> [existing\_private\_dns\_zone\_name](#input\_existing\_private\_dns\_zone\_name) | ID of existing private hosted zone to use for private DNS records created by external-dns. This is required when create\_dns\_zones is false and ingress\_nginx is true with internet\_facing\_ingress\_lb false. | `string` | `null` | no |
-| <a name="input_existing_public_dns_zone_name"></a> [existing\_public\_dns\_zone\_name](#input\_existing\_public\_dns\_zone\_name) | ID of existing public hosted zone to use for public DNS records created by external-dns and public LetsEncrypt certificate validation by cert-manager. This is required when create\_dns\_zones is false and ingress\_nginx and internet\_facing\_ingress\_lb are true or when cert\_manager and cert\_manager\_letsencrypt\_clusterissuers are true. | `string` | `null` | no |
 | <a name="input_existing_vpc_name"></a> [existing\_vpc\_name](#input\_existing\_vpc\_name) | Name of an existing Google VPC to use. When specified, other network variables are ignored. | `string` | `null` | no |
-| <a name="input_external_dns"></a> [external\_dns](#input\_external\_dns) | Install the external\_dns helm chart to create DNS records for ingress resources matching the domain\_name variable. All other external\_dns variables are ignored if this variable is false. | `bool` | `true` | no |
+| <a name="input_external_dns"></a> [external\_dns](#input\_external\_dns) | Install the external\_dns helm chart to manage DNS records for resources created by the application. All other external\_dns variables are ignored if this variable is false. | `bool` | `true` | no |
 | <a name="input_external_dns_values_overrides"></a> [external\_dns\_values\_overrides](#input\_external\_dns\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
+| <a name="input_gcr_registry_name"></a> [gcr\_registry\_name](#input\_gcr\_registry\_name) | Name of the Artifact Registry repository. Defaults to the name if not specified. | `string` | `null` | no |
 | <a name="input_google_project_id"></a> [google\_project\_id](#input\_google\_project\_id) | The ID of the Google Project where these resources will be created | `string` | n/a | yes |
 | <a name="input_ingress_nginx"></a> [ingress\_nginx](#input\_ingress\_nginx) | Install the ingress-nginx helm chart to use as the ingress controller for the GKE cluster. All other ingress\_nginx variables are ignored if this variable is false. | `bool` | `true` | no |
 | <a name="input_ingress_nginx_values_overrides"></a> [ingress\_nginx\_values\_overrides](#input\_ingress\_nginx\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
@@ -438,19 +413,18 @@ The default installation supports DataRobot versions >= 10.0.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_artifact_registry_repo_id"></a> [artifact\_registry\_repo\_id](#output\_artifact\_registry\_repo\_id) | ID of the Artifact Registry repository |
 | <a name="output_artifact_registry_repo_path"></a> [artifact\_registry\_repo\_path](#output\_artifact\_registry\_repo\_path) | Path to the Artifact Registry repository |
 | <a name="output_datarobot_service_account_email"></a> [datarobot\_service\_account\_email](#output\_datarobot\_service\_account\_email) | Email of the DataRobot service account |
 | <a name="output_datarobot_service_account_key"></a> [datarobot\_service\_account\_key](#output\_datarobot\_service\_account\_key) | DataRobot service account key |
+| <a name="output_dns_zone_name"></a> [dns\_zone\_name](#output\_dns\_zone\_name) | Name of the DNS zone |
+| <a name="output_dns_zone_name_servers"></a> [dns\_zone\_name\_servers](#output\_dns\_zone\_name\_servers) | Name servers of the DNS zone |
 | <a name="output_gke_cluster_name"></a> [gke\_cluster\_name](#output\_gke\_cluster\_name) | Name of the GKE cluster |
 | <a name="output_mongodb_endpoint"></a> [mongodb\_endpoint](#output\_mongodb\_endpoint) | MongoDB endpoint |
 | <a name="output_mongodb_password"></a> [mongodb\_password](#output\_mongodb\_password) | MongoDB admin password |
 | <a name="output_postgres_endpoint"></a> [postgres\_endpoint](#output\_postgres\_endpoint) | PostgreSQL endpoint |
 | <a name="output_postgres_password"></a> [postgres\_password](#output\_postgres\_password) | PostgreSQL admin password |
-| <a name="output_private_dns_zone_name"></a> [private\_dns\_zone\_name](#output\_private\_dns\_zone\_name) | Name of the private DNS zone |
-| <a name="output_public_dns_zone_name"></a> [public\_dns\_zone\_name](#output\_public\_dns\_zone\_name) | Name of the public DNS zone |
-| <a name="output_public_dns_zone_name_servers"></a> [public\_dns\_zone\_name\_servers](#output\_public\_dns\_zone\_name\_servers) | Name servers of the public DNS zone |
 | <a name="output_redis_endpoint"></a> [redis\_endpoint](#output\_redis\_endpoint) | Google Memorystore Redis endpoint |
 | <a name="output_redis_password"></a> [redis\_password](#output\_redis\_password) | Google Memorystore Redis instance primary access key |
 | <a name="output_redis_port"></a> [redis\_port](#output\_redis\_port) | Google Memorystore Redis port |
