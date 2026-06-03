@@ -133,7 +133,7 @@ variable "create_storage" {
 }
 
 variable "storage_force_destroy" {
-  description = "Force destroy for the public and private Cloud DNS zones when terminating"
+  description = "Force destroy the Google Storage Bucket when terminating, deleting all objects it contains. Ignored if an existing_gcs_bucket_name is specified or create_storage is false."
   type        = bool
   default     = false
 }

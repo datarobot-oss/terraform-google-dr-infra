@@ -46,7 +46,7 @@ terraform apply
 ### Network
 #### Toggle
 - `create_network` to create a new Google VPC
-- `existing_vpc_name`, `existing_kubernetes_nodes_subnet_name`, `existing_kubernetes_pods_range_name`, and `existing_kubernetes_services_range_name` to use an existing VPC and subnet
+- `existing_vpc_name`, `existing_kubernetes_nodes_subnet`, and `existing_kubernetes_pods_range_name` to use an existing VPC and subnet
 
 #### Description
 Create a new Google VPC with one subnet using a `/20` slice of `network_address_space` and a NAT gateway attached.
@@ -407,7 +407,7 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_redis_transit_encryption_mode"></a> [redis\_transit\_encryption\_mode](#input\_redis\_transit\_encryption\_mode) | The TLS mode of the Redis instance, If not provided, TLS is enabled for the instance. Possible values are: SERVER\_AUTHENTICATION, DISABLED. | `string` | `"SERVER_AUTHENTICATION"` | no |
 | <a name="input_region"></a> [region](#input\_region) | Google region to create the resources in | `string` | n/a | yes |
 | <a name="input_release_channel"></a> [release\_channel](#input\_release\_channel) | The release channel of this cluster. Accepted values are `UNSPECIFIED`, `RAPID`, `REGULAR` and `STABLE`. Defaults to `STABLE`. | `string` | `"STABLE"` | no |
-| <a name="input_storage_force_destroy"></a> [storage\_force\_destroy](#input\_storage\_force\_destroy) | Force destroy for the public and private Cloud DNS zones when terminating | `bool` | `false` | no |
+| <a name="input_storage_force_destroy"></a> [storage\_force\_destroy](#input\_storage\_force\_destroy) | Force destroy the Google Storage Bucket when terminating, deleting all objects it contains. Ignored if an existing\_gcs\_bucket\_name is specified or create\_storage is false. | `bool` | `false` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all created resources | `map(string)` | <pre>{<br/>  "managed-by": "terraform"<br/>}</pre> | no |
 
 ## Outputs
