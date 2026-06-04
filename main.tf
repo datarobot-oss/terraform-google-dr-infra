@@ -103,42 +103,27 @@ module "cloud_router" {
 ################################################################################
 # DNS
 ################################################################################
-data "google_dns_managed_zone" "existing_public_dns_zone" {
-  count = var.existing_public_dns_zone_name != null ? 1 : 0
-  name  = var.existing_public_dns_zone_name
+data "google_dns_managed_zone" "existing" {
+  count = var.existing_dns_zone_name != null ? 1 : 0
+  name  = var.existing_dns_zone_name
 }
 
 locals {
-  public_dns_zone_name     = var.existing_public_dns_zone_name != null ? var.existing_public_dns_zone_name : try(module.public_dns[0].name, null)
-  public_zone_name_servers = try(data.google_dns_managed_zone.existing_public_dns_zone[0].name_servers, module.public_dns[0].name_servers, null)
-  private_dns_zone_name    = var.existing_private_dns_zone_name != null ? var.existing_private_dns_zone_name : try(module.private_dns[0].name, null)
+  dns_zone_name         = var.existing_dns_zone_name != null ? var.existing_dns_zone_name : try(module.dns[0].name, null)
+  dns_zone_name_servers = try(data.google_dns_managed_zone.existing[0].name_servers, module.dns[0].name_servers, null)
 }
 
-module "public_dns" {
+module "dns" {
   source  = "terraform-google-modules/cloud-dns/google"
   version = "~> 5.0"
-  count   = var.existing_public_dns_zone_name == null && var.create_dns_zones ? 1 : 0
-
-  project_id    = var.google_project_id
-  type          = "public"
-  name          = "${var.name}-dns-public"
-  domain        = "${var.domain_name}."
-  force_destroy = var.dns_zones_force_destroy
-
-  labels = var.tags
-}
-
-module "private_dns" {
-  source  = "terraform-google-modules/cloud-dns/google"
-  version = "~> 5.0"
-  count   = var.existing_private_dns_zone_name == null && var.create_dns_zones ? 1 : 0
+  count   = var.existing_dns_zone_name == null && var.create_dns_zone ? 1 : 0
 
   project_id                         = var.google_project_id
-  type                               = "private"
-  name                               = "${var.name}-dns-private"
+  type                               = var.dns_zone_public ? "public" : "private"
+  name                               = "${var.name}-dns"
   domain                             = "${var.domain_name}."
-  private_visibility_config_networks = [local.vpc_self_link]
-  force_destroy                      = var.dns_zones_force_destroy
+  private_visibility_config_networks = var.dns_zone_public ? [] : [local.vpc_self_link]
+  force_destroy                      = var.dns_zone_force_destroy
 
   labels = var.tags
 }
@@ -540,7 +525,7 @@ module "cert_manager" {
   google_project_id = var.google_project_id
 
   name                       = var.name
-  dns_zone_name              = local.public_dns_zone_name
+  dns_zone_name              = local.dns_zone_name
   letsencrypt_clusterissuers = var.cert_manager_letsencrypt_clusterissuers
   email_address              = var.cert_manager_letsencrypt_email_address
   values_overrides           = var.cert_manager_values_overrides
@@ -557,9 +542,9 @@ module "external_dns" {
 
   name             = var.name
   domain_name      = var.domain_name
-  dns_zone_name    = var.internet_facing_ingress_lb ? local.public_dns_zone_name : local.private_dns_zone_name
+  dns_zone_name    = local.dns_zone_name
   gke_cluster_name = local.gke_cluster_name
-  zone_visibility  = var.internet_facing_ingress_lb ? "public" : "private"
+  zone_visibility  = var.dns_zone_public ? "public" : "private"
   values_overrides = var.external_dns_values_overrides
 }
 

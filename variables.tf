@@ -4,7 +4,7 @@ variable "name" {
 }
 
 variable "domain_name" {
-  description = "Name of the domain to use for the DataRobot application. If create_dns_zones is true then zones will be created for this domain. It is also used by the cert-manager helm chart for DNS validation and as a domain filter by the external-dns helm chart."
+  description = "Name of the domain to use for the DataRobot application. If create_dns_zone is true then a zone will be created for this domain. It is also used by the cert-manager helm chart for DNS validation and as a domain filter by the external-dns helm chart."
   type        = string
   default     = ""
 }
@@ -91,26 +91,26 @@ variable "mongodb_subnet_cidr" {
 # DNS
 ################################################################################
 
-variable "existing_public_dns_zone_name" {
-  description = "ID of existing public hosted zone to use for public DNS records created by external-dns and public LetsEncrypt certificate validation by cert-manager. This is required when create_dns_zones is false and ingress_nginx and internet_facing_ingress_lb are true or when cert_manager and cert_manager_letsencrypt_clusterissuers are true."
+variable "existing_dns_zone_name" {
+  description = "Name of an existing Cloud DNS managed zone to use. When specified, all other DNS variables will be ignored."
   type        = string
   default     = null
 }
 
-variable "existing_private_dns_zone_name" {
-  description = "ID of existing private hosted zone to use for private DNS records created by external-dns. This is required when create_dns_zones is false and ingress_nginx is true with internet_facing_ingress_lb false."
-  type        = string
-  default     = null
-}
-
-variable "create_dns_zones" {
-  description = "Create DNS zones for domain_name. Ignored if existing_public_dns_zone_id and existing_private_dns_zone_id are specified."
+variable "create_dns_zone" {
+  description = "Create a Cloud DNS managed zone for domain_name. Ignored if existing_dns_zone_name is specified."
   type        = bool
   default     = true
 }
 
-variable "dns_zones_force_destroy" {
-  description = "Force destroy for the public and private Cloud DNS zones when terminating"
+variable "dns_zone_public" {
+  description = "Create a public Cloud DNS managed zone. When `false`, a private zone will be created for the given VPC."
+  type        = bool
+  default     = true
+}
+
+variable "dns_zone_force_destroy" {
+  description = "Force destroy the Cloud DNS managed zone. Ignored if an existing_dns_zone_name is specified or create_dns_zone is false."
   type        = bool
   default     = false
 }
@@ -133,7 +133,7 @@ variable "create_storage" {
 }
 
 variable "storage_force_destroy" {
-  description = "Force destroy for the public and private Cloud DNS zones when terminating"
+  description = "Force destroy the Google Storage Bucket when terminating, deleting all objects it contains. Ignored if an existing_gcs_bucket_name is specified or create_storage is false."
   type        = bool
   default     = false
 }
@@ -530,7 +530,7 @@ variable "cert_manager" {
 }
 
 variable "cert_manager_letsencrypt_clusterissuers" {
-  description = "Whether to create letsencrypt-prod and letsencrypt-staging ClusterIssuers"
+  description = "Whether to create letsencrypt-prod and letsencrypt-staging ClusterIssuers. This will only work if the DNS zone is public."
   type        = bool
   default     = true
 }
@@ -548,7 +548,7 @@ variable "cert_manager_values_overrides" {
 }
 
 variable "external_dns" {
-  description = "Install the external_dns helm chart to create DNS records for ingress resources matching the domain_name variable. All other external_dns variables are ignored if this variable is false."
+  description = "Install the external_dns helm chart to manage DNS records for resources created by the application. All other external_dns variables are ignored if this variable is false."
   type        = bool
   default     = true
 }

@@ -1,0 +1,23 @@
+# Copy this file to terraform.tfvars and fill in the values before running terraform apply.
+
+name              = "datarobot"
+environment       = "dev" # must be one of: dev, staging, prod
+google_project_id = "your-google-project-id"
+region            = "us-west1"
+domain_name       = "datarobot.example.com"
+email_address     = "you@example.com"
+
+# Existing network resources to deploy into.
+existing_vpc_name                   = "existing-vpc-name"
+existing_kubernetes_nodes_subnet    = "existing-subnet-name"
+existing_kubernetes_pods_range_name = "existing-pods-range-name"
+
+# IP address of the host running terraform apply. Granted access to the private GKE API endpoint.
+provisioner_ip = "10.0.1.5"
+
+# CIDR block allowed to reach the internal ingress load balancer.
+ingress_allowed_cidr = "10.0.0.0/24"
+
+tags = {
+  managed-by = "terraform"
+}

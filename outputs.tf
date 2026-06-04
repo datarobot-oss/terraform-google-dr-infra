@@ -12,19 +12,14 @@ output "vpc_name" {
 # DNS
 ################################################################################
 
-output "public_dns_zone_name" {
-  description = "Name of the public DNS zone"
-  value       = local.public_dns_zone_name
+output "dns_zone_name" {
+  description = "Name of the DNS zone"
+  value       = local.dns_zone_name
 }
 
-output "private_dns_zone_name" {
-  description = "Name of the private DNS zone"
-  value       = local.private_dns_zone_name
-}
-
-output "public_dns_zone_name_servers" {
-  description = "Name servers of the public DNS zone"
-  value       = local.public_zone_name_servers
+output "dns_zone_name_servers" {
+  description = "Name servers of the DNS zone"
+  value       = local.dns_zone_name_servers
 }
 
 ################################################################################
