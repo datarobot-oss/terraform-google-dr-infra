@@ -115,6 +115,12 @@ variable "dns_zone_force_destroy" {
   default     = false
 }
 
+variable "dns_zone_name" {
+  description = "Name of the Cloud DNS managed zone to create. If not specified, defaults to `<name>-dns`."
+  type        = string
+  default     = null
+}
+
 
 ################################################################################
 # Storage
@@ -310,6 +316,18 @@ variable "create_postgres" {
   default     = false
 }
 
+variable "postgres_name" {
+  description = "Name of the CloudSQL PostgreSQL instance. If not specified, defaults to `<name>-postgres`."
+  type        = string
+  default     = null
+}
+
+variable "postgres_address_name" {
+  description = "Name of the global address reservation for PostgreSQL VPC peering. If not specified, defaults to `<name>-postgres-address`."
+  type        = string
+  default     = null
+}
+
 variable "postgres_database_version" {
   description = "The PostgreSQL version to use"
   type        = string
@@ -370,6 +388,18 @@ variable "create_redis" {
   default     = false
 }
 
+variable "redis_name" {
+  description = "Name of the Memorystore Redis instance. If not specified, defaults to `<name>-redis`."
+  type        = string
+  default     = null
+}
+
+variable "redis_address_name" {
+  description = "Name of the global address reservation for Redis VPC peering. If not specified, defaults to `<name>-redis-address`."
+  type        = string
+  default     = null
+}
+
 variable "redis_tier" {
   description = "The service tier of the instance: BASIC or STANDARD_HA"
   type        = string
@@ -397,6 +427,12 @@ variable "create_mongodb" {
   description = "Whether to create a MongoDB Atlas instance"
   type        = bool
   default     = false
+}
+
+variable "mongodb_name" {
+  description = "Name of the MongoDB Atlas instance. If not specified, the `name` variable will be used."
+  type        = string
+  default     = null
 }
 
 variable "existing_mongodb_subnet_name" {
@@ -614,6 +650,12 @@ variable "ingress_service_name" {
   description = "The name of the ingress service to attach the private link to."
   type        = string
   default     = "ingress-nginx-controller"
+}
+
+variable "ingress_psc_service_attachment_name" {
+  description = "Name of the ServiceAttachment Kubernetes resource. If not specified, defaults to `datarobot-internal-ingress-psc`."
+  type        = string
+  default     = "datarobot-internal-ingress-psc"
 }
 
 #################################################################################

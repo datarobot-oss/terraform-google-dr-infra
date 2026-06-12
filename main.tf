@@ -120,7 +120,7 @@ module "dns" {
 
   project_id                         = var.google_project_id
   type                               = var.dns_zone_public ? "public" : "private"
-  name                               = "${var.name}-dns"
+  name                               = coalesce(var.dns_zone_name, "${var.name}-dns")
   domain                             = "${var.domain_name}."
   private_visibility_config_networks = var.dns_zone_public ? [] : [local.vpc_self_link]
   force_destroy                      = var.dns_zone_force_destroy
@@ -304,7 +304,7 @@ resource "google_compute_global_address" "postgres" {
   count = var.create_postgres ? 1 : 0
 
   project       = var.google_project_id
-  name          = "${var.name}-postgres-address"
+  name          = coalesce(var.postgres_address_name, "${var.name}-postgres-address")
   address_type  = "INTERNAL"
   purpose       = "VPC_PEERING"
   address       = split("/", local.postgres_cidr)[0]
@@ -317,8 +317,9 @@ module "postgres" {
   version = "~> 26.0"
   count   = var.create_postgres ? 1 : 0
 
-  name              = "${var.name}-postgres"
+  name              = coalesce(var.postgres_name, "${var.name}-postgres")
   project_id        = var.google_project_id
+  region            = var.region
   availability_type = var.postgres_availability_type
   ip_configuration = {
     private_network    = local.vpc_self_link
@@ -360,7 +361,7 @@ resource "google_compute_global_address" "redis" {
   count = var.create_redis ? 1 : 0
 
   project       = var.google_project_id
-  name          = "${var.name}-redis-address"
+  name          = coalesce(var.redis_address_name, "${var.name}-redis-address")
   address_type  = "INTERNAL"
   purpose       = "VPC_PEERING"
   address       = split("/", local.redis_cidr)[0]
@@ -373,7 +374,7 @@ module "redis" {
   version = "~> 15.0"
   count   = var.create_redis ? 1 : 0
 
-  name                    = "${var.name}-redis"
+  name                    = coalesce(var.redis_name, "${var.name}-redis")
   project_id              = var.google_project_id
   region                  = var.region
   authorized_network      = local.vpc_name
@@ -433,7 +434,7 @@ module "mongodb" {
   source = "./modules/mongodb"
   count  = var.create_mongodb ? 1 : 0
 
-  name                   = var.name
+  name                   = coalesce(var.mongodb_name, var.name)
   google_project_id      = var.google_project_id
   region                 = var.region
   vpc_name               = local.vpc_name
@@ -482,7 +483,8 @@ module "private_link_service" {
   ingress_psc_consumer_allow_list_projects = var.ingress_psc_consumer_projects
   psc_nat_subnets                          = [local.ingress_psc_subnet.name]
 
-  ingress_service_name = var.ingress_service_name
+  ingress_service_name    = var.ingress_service_name
+  service_attachment_name = var.ingress_psc_service_attachment_name
 
   depends_on = [local.gke_cluster_name, module.ingress_nginx]
 }
