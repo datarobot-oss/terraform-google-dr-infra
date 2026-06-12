@@ -313,7 +313,7 @@ variable "create_postgres" {
 variable "postgres_database_version" {
   description = "The PostgreSQL version to use"
   type        = string
-  default     = "POSTGRES_13"
+  default     = "POSTGRES_17"
 }
 
 variable "postgres_availability_type" {
