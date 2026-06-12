@@ -7,7 +7,7 @@ resource "kubectl_manifest" "internal_ingress_psc" {
     apiVersion = "networking.gke.io/v1"
     kind       = "ServiceAttachment"
     metadata = {
-      name      = "datarobot-internal-ingress-psc"
+      name      = var.service_attachment_name
       namespace = local.namespace
     }
     spec = {
