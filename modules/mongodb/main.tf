@@ -16,8 +16,8 @@ resource "mongodbatlas_project_ip_access_list" "this" {
 resource "mongodbatlas_privatelink_endpoint" "this" {
   project_id               = mongodbatlas_project.this.id
   provider_name            = local.cloud_provider
-  region                   = local.region
-  delete_on_create_timeout = true
+  region                   = var.region
+  delete_on_create_timeout = var.privatelink_delete_on_create_timeout
   timeouts {
     create = "30m"
     delete = "30m"
@@ -29,7 +29,7 @@ resource "mongodbatlas_privatelink_endpoint" "this" {
 resource "google_compute_address" "this" {
   count        = 50
   project      = var.google_project_id
-  name         = "${var.name}-mongodb-address-${count.index}"
+  name         = "${coalesce(var.address_name_prefix, "${var.name}-mongodb-address")}-${count.index}"
   subnetwork   = var.subnet
   address_type = "INTERNAL"
   address      = cidrhost(var.subnet_cidr, count.index + var.network_reservation_ip_offset) # GCP reserves first 2 addresses in subnet
@@ -58,7 +58,7 @@ resource "mongodbatlas_privatelink_endpoint_service" "this" {
   provider_name            = local.cloud_provider
   endpoint_service_id      = var.vpc_name
   gcp_project_id           = var.google_project_id
-  delete_on_create_timeout = true
+  delete_on_create_timeout = var.privatelink_service_delete_on_create_timeout
   timeouts {
     create = "30m"
     delete = "30m"

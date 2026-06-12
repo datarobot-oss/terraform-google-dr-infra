@@ -31,3 +31,9 @@ variable "ingress_service_name" {
   description = "The name of the ingress service to attach the private link to."
   type        = string
 }
+
+variable "service_attachment_name" {
+  description = "Name of the ServiceAttachment Kubernetes resource. If not specified, defaults to `datarobot-internal-ingress-psc`."
+  type        = string
+  default     = "datarobot-internal-ingress-psc"
+}
