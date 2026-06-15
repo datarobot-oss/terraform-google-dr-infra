@@ -115,6 +115,12 @@ variable "dns_zone_force_destroy" {
   default     = false
 }
 
+variable "dns_zone_name" {
+  description = "Name of the Cloud DNS managed zone to create. If not specified, defaults to `<name>-dns`."
+  type        = string
+  default     = null
+}
+
 
 ################################################################################
 # Storage
@@ -310,6 +316,18 @@ variable "create_postgres" {
   default     = false
 }
 
+variable "postgres_name" {
+  description = "Name of the CloudSQL PostgreSQL instance. If not specified, defaults to `<name>-postgres`."
+  type        = string
+  default     = null
+}
+
+variable "postgres_address_name" {
+  description = "Name of the global address reservation for PostgreSQL VPC peering. If not specified, defaults to `<name>-postgres-address`."
+  type        = string
+  default     = null
+}
+
 variable "postgres_database_version" {
   description = "The PostgreSQL version to use"
   type        = string
@@ -346,6 +364,24 @@ variable "postgres_disk_autoresize_limit" {
   default     = 0
 }
 
+variable "postgres_ipv4_enabled" {
+  description = "Whether to assign a public IPv4 address to the Cloud SQL instance. Defaults to false (private-only)."
+  type        = bool
+  default     = false
+}
+
+variable "postgres_maintenance_window_day" {
+  description = "Day of the week (1=Monday .. 7=Sunday) for the Cloud SQL maintenance window."
+  type        = number
+  default     = 1
+}
+
+variable "postgres_maintenance_window_hour" {
+  description = "Hour of the day (0-23 UTC) for the Cloud SQL maintenance window."
+  type        = number
+  default     = 23
+}
+
 variable "postgres_deletion_protection" {
   description = "Whether Terraform will be prevented from destroying the instance. When the field is set to true or unset in Terraform state, a terraform apply or terraform destroy that would delete the instance will fail. When the field is set to false, deleting the instance is allowed"
   type        = bool
@@ -370,6 +406,18 @@ variable "create_redis" {
   default     = false
 }
 
+variable "redis_name" {
+  description = "Name of the Memorystore Redis instance. If not specified, defaults to `<name>-redis`."
+  type        = string
+  default     = null
+}
+
+variable "redis_address_name" {
+  description = "Name of the global address reservation for Redis VPC peering. If not specified, defaults to `<name>-redis-address`."
+  type        = string
+  default     = null
+}
+
 variable "redis_tier" {
   description = "The service tier of the instance: BASIC or STANDARD_HA"
   type        = string
@@ -388,6 +436,26 @@ variable "redis_memory_size_gb" {
   default     = 8
 }
 
+variable "redis_display_name" {
+  description = "An arbitrary and optional user-provided name for the instance."
+  type        = string
+  default     = null
+}
+
+variable "redis_maintenance_policy" {
+  description = "Maintenance policy for the Redis instance (weekly window day and start time)."
+  type = object({
+    day = string
+    start_time = object({
+      hours   = number
+      minutes = number
+      seconds = number
+      nanos   = number
+    })
+  })
+  default = null
+}
+
 
 ################################################################################
 # MongoDB
@@ -397,6 +465,12 @@ variable "create_mongodb" {
   description = "Whether to create a MongoDB Atlas instance"
   type        = bool
   default     = false
+}
+
+variable "mongodb_name" {
+  description = "Name of the MongoDB Atlas instance. If not specified, the `name` variable will be used."
+  type        = string
+  default     = null
 }
 
 variable "existing_mongodb_subnet_name" {
@@ -487,6 +561,50 @@ variable "mongodb_network_reservation_ip_offset" {
   type        = number
   default     = 2
   description = "Value to offset the network reservation IP"
+}
+
+variable "mongodb_privatelink_delete_on_create_timeout" {
+  description = "Whether to delete the private link endpoint on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources."
+  type        = bool
+  default     = null
+}
+
+variable "mongodb_privatelink_service_delete_on_create_timeout" {
+  description = "Whether to delete the privatelink endpoint service on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources."
+  type        = bool
+  default     = null
+}
+
+variable "mongodb_address_name_prefix" {
+  description = "Prefix for GCP compute address and forwarding rule names. If not specified, defaults to `<mongodb_name>-mongodb-address`."
+  type        = string
+  default     = null
+}
+
+variable "mongodb_project_ip_access_list" {
+  description = "CIDR to add to the MongoDB Atlas project IP access list. If not specified, the Kubernetes nodes subnet CIDR is used."
+  type        = string
+  default     = null
+}
+
+variable "password_constraints" {
+  description = "Constraints to put on any generated passwords"
+  type = object({
+    length           = number
+    min_lower        = optional(number)
+    min_numeric      = optional(number)
+    min_upper        = optional(number)
+    min_special      = optional(number, 0)
+    special          = optional(bool)
+    override_special = optional(string)
+  })
+  default = {
+    length           = 32
+    min_lower        = 1
+    min_numeric      = 1
+    min_upper        = 1
+    override_special = "-"
+  }
 }
 
 ################################################################################
@@ -614,6 +732,12 @@ variable "ingress_service_name" {
   description = "The name of the ingress service to attach the private link to."
   type        = string
   default     = "ingress-nginx-controller"
+}
+
+variable "ingress_psc_service_attachment_name" {
+  description = "Name of the ServiceAttachment Kubernetes resource. If not specified, defaults to `datarobot-internal-ingress-psc`."
+  type        = string
+  default     = "datarobot-internal-ingress-psc"
 }
 
 #################################################################################

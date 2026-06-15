@@ -33,6 +33,38 @@ variable "project_ip_access_list" {
   type        = string
 }
 
+variable "privatelink_delete_on_create_timeout" {
+  description = "Whether to delete the private link endpoint on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources — Atlas API does not persist this flag."
+  type        = bool
+  default     = null
+}
+
+variable "address_name_prefix" {
+  description = "Prefix for GCP compute address and forwarding rule names. If not specified, defaults to `<name>-mongodb-address`."
+  type        = string
+  default     = null
+}
+
+variable "password_constraints" {
+  description = "Constraints to put on any generated passwords"
+  type = object({
+    length           = number
+    min_lower        = optional(number)
+    min_numeric      = optional(number)
+    min_upper        = optional(number)
+    min_special      = optional(number, 0)
+    special          = optional(bool)
+    override_special = optional(string)
+  })
+  default = {
+    length           = 32
+    min_lower        = 1
+    min_numeric      = 1
+    min_upper        = 1
+    override_special = "-"
+  }
+}
+
 variable "mongodb_version" {
   description = "MongoDB version"
   type        = string
@@ -99,4 +131,10 @@ variable "tags" {
 variable "network_reservation_ip_offset" {
   type        = number
   description = "Value to offset the network reservation IP"
+}
+
+variable "privatelink_service_delete_on_create_timeout" {
+  type        = bool
+  default     = null
+  description = "Whether to delete the privatelink endpoint service on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources — Atlas API does not persist this flag."
 }
