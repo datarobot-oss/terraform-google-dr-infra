@@ -340,6 +340,12 @@ variable "postgres_availability_type" {
   default     = "REGIONAL"
 }
 
+variable "postgres_edition" {
+  description = "The edition of the Cloud SQL instance. Can be ENTERPRISE or ENTERPRISE_PLUS."
+  type        = string
+  default     = "ENTERPRISE"
+}
+
 variable "postgres_tier" {
   description = "The machine type to use. See tiers for more details and supported versions. Postgres supports only shared-core machine types, and custom machine types such as db-custom-2-13312."
   type        = string
