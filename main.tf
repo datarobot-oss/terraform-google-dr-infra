@@ -329,6 +329,7 @@ module "postgres" {
   }
 
   database_version      = var.postgres_database_version
+  edition               = var.postgres_edition
   tier                  = var.postgres_tier
   disk_type             = var.postgres_disk_type
   disk_size             = var.postgres_disk_size
