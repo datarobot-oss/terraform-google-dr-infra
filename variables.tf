@@ -593,6 +593,39 @@ variable "mongodb_project_ip_access_list" {
   default     = null
 }
 
+variable "mongodb_backup_schedule" {
+  description = "Configuration for the MongoDB Atlas cloud backup schedule policy items and cross-region copy settings"
+  type = object({
+    policy_item_hourly = optional(object({
+      frequency_interval = optional(number, 6)
+      retention_unit     = optional(string, "days")
+      retention_value    = optional(number, 7)
+    }), {})
+    policy_item_daily = optional(object({
+      frequency_interval = optional(number, 1)
+      retention_unit     = optional(string, "days")
+      retention_value    = optional(number, 30)
+    }), {})
+    policy_item_weekly = optional(object({
+      frequency_interval = optional(number, 6)
+      retention_unit     = optional(string, "days")
+      retention_value    = optional(number, 30)
+    }), {})
+    policy_item_monthly = optional(object({
+      frequency_interval = optional(number, 1)
+      retention_unit     = optional(string, "months")
+      retention_value    = optional(number, 1)
+    }), {})
+    copy_settings = optional(object({
+      enabled            = optional(bool, true)
+      cloud_provider     = optional(string, "GCP")
+      frequencies        = optional(list(string), ["DAILY"])
+      should_copy_oplogs = optional(bool, false)
+    }), {})
+  })
+  default = {}
+}
+
 variable "password_constraints" {
   description = "Constraints to put on any generated passwords"
   type = object({

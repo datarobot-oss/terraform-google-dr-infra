@@ -464,6 +464,7 @@ module "mongodb" {
   slack_api_token                    = var.mongodb_slack_api_token
   slack_notification_channel         = var.mongodb_slack_notification_channel
   network_reservation_ip_offset      = var.mongodb_network_reservation_ip_offset
+  backup_schedule                    = var.mongodb_backup_schedule
   tags                               = var.tags
 }
 
