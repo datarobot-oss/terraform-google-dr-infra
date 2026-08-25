@@ -33,9 +33,8 @@ module "datarobot_infra" {
   ################################################################################
   # DNS
   ################################################################################
-  create_dns_zone        = true
-  dns_zone_public        = true
-  dns_zone_force_destroy = true
+  create_dns_zones        = true
+  dns_zones_force_destroy = true
 
   ################################################################################
   # Storage

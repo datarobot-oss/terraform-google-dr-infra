@@ -1,5 +1,7 @@
 domainFilters:
 - ${domain}
+sources:
+- ingress
 txtOwnerId: ${clusterName}
 provider: google
 google:
