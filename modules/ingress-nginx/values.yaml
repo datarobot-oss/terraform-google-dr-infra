@@ -3,8 +3,6 @@ controller:
   admissionWebhooks:
     enabled: false
   config:
-    use-forwarded-headers: "true"
-    use-proxy-protocol: "true"
     worker-shutdown-timeout: "600s"
   replicaCount: 3
   terminationGracePeriodSeconds: 600
