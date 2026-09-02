@@ -310,6 +310,17 @@ resource "google_service_account_iam_member" "datarobot" {
   member             = "serviceAccount:${var.google_project_id}.svc.id.goog[${var.datarobot_namespace}/${each.value}]"
 }
 
+# pipelines-api signs GCS presigned URLs (task-result fetch) via the IAM signBlob
+# API under Workload Identity (no local key), so the datarobot GSA must be able to
+# sign on its own behalf.
+resource "google_service_account_iam_member" "datarobot_sign_blob" {
+  count = var.create_app_identity ? 1 : 0
+
+  service_account_id = module.app_identity[0].service_account.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = module.app_identity[0].iam_email
+}
+
 
 ################################################################################
 # PostgreSQL

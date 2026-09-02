@@ -296,6 +296,8 @@ variable "datarobot_service_accounts" {
     "exec-manager-wrangling",
     "lrs-job-manager",
     "blob-view-service",
+    "pipelines-api-service-account",
+    "pipelines-electron-runner",
   ]
 }
 
