@@ -153,7 +153,7 @@ TBD
 - `create_app_identity` to create a new Google Service account to represent the DataRobot application
 
 #### Description
-Create a new GKE Service Account with `roles/storage.admin` access to the Google Cloud Storage bucket and `roles/artifactregistry.writer` access to the Google Artifact Registry Repository.
+Create a new GKE Service Account with `roles/storage.admin` access to the Google Cloud Storage bucket and `roles/artifactregistry.repoAdmin` access to the Google Artifact Registry Repository, so the image build service can push images and delete the ones DataRobot cleans up.
 
 Workload identities are created for each `datarobot_service_accounts` within the `datarobot_namespace` and attached to this Service Account. This allows those pods running with those service accounts to access file storage and the artifact registry.
 
