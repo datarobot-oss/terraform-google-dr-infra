@@ -298,7 +298,7 @@ resource "google_artifact_registry_repository_iam_member" "datarobot" {
   count = var.create_app_identity ? 1 : 0
 
   repository = local.artifact_registry_repo
-  role       = "roles/artifactregistry.writer"
+  role       = "roles/artifactregistry.repoAdmin"
   member     = module.app_identity[0].iam_email
 }
 
