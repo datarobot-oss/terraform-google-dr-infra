@@ -215,7 +215,7 @@ Not required
 - `cert_manager` to install the `cert-manager` helm chart
 
 #### Description
-Uses the [terraform-helm-release](https://github.com/terraform-module/terraform-helm-release) module to install the `https://charts.jetstack.io/cert-manager` helm chart into the `cert-manager` namespace.
+Uses the [terraform-helm-release](https://github.com/terraform-module/terraform-helm-release) module to install the `oci://quay.io/jetstack/charts/cert-manager` helm chart into the `cert-manager` namespace.
 
 A Google Service Account is created for the `cert-manager` Kubernetes service account running in the `cert-manager` namespace that allows the creation of DNS resources within the specified DNS zone.
 

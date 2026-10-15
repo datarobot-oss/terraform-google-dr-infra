@@ -28,9 +28,9 @@ resource "google_dns_managed_zone_iam_member" "dns_admin" {
 resource "helm_release" "this" {
   name       = local.name
   namespace  = local.namespace
-  repository = "https://charts.jetstack.io"
+  repository = "oci://quay.io/jetstack/charts"
   chart      = local.name
-  version    = "1.16.1"
+  version    = "v1.16.2"
 
   create_namespace = true
 
