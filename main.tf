@@ -121,7 +121,7 @@ module "public_dns" {
 
   project_id    = var.google_project_id
   type          = "public"
-  name          = "${var.name}-dns-public"
+  name          = coalesce(var.public_dns_zone_name, "${var.name}-dns-public")
   domain        = "${var.domain_name}."
   force_destroy = var.dns_zones_force_destroy
 
@@ -135,7 +135,7 @@ module "private_dns" {
 
   project_id                         = var.google_project_id
   type                               = "private"
-  name                               = "${var.name}-dns-private"
+  name                               = coalesce(var.private_dns_zone_name, "${var.name}-dns-private")
   domain                             = "${var.domain_name}."
   private_visibility_config_networks = [local.vpc_self_link]
   force_destroy                      = var.dns_zones_force_destroy
