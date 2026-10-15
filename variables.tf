@@ -103,6 +103,18 @@ variable "existing_private_dns_zone_name" {
   default     = null
 }
 
+variable "public_dns_zone_name" {
+  description = "Name of the public Cloud DNS zone created when create_dns_zones is true. Defaults to <name>-dns-public."
+  type        = string
+  default     = null
+}
+
+variable "private_dns_zone_name" {
+  description = "Name of the private Cloud DNS zone created when create_dns_zones is true. Defaults to <name>-dns-private."
+  type        = string
+  default     = null
+}
+
 variable "create_dns_zones" {
   description = "Create DNS zones for domain_name. Ignored if existing_public_dns_zone_id and existing_private_dns_zone_id are specified."
   type        = bool
