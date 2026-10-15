@@ -282,7 +282,7 @@ module "app_identity" {
 
   project_id = var.google_project_id
 
-  names         = [var.name]
+  names         = [coalesce(var.app_identity_account_id, var.name)]
   generate_keys = true
 }
 
