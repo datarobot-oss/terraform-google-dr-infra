@@ -273,6 +273,12 @@ variable "create_app_identity" {
   default     = true
 }
 
+variable "app_identity_account_id" {
+  description = "account_id of the DataRobot application service account when create_app_identity is true. Defaults to name."
+  type        = string
+  default     = null
+}
+
 variable "datarobot_namespace" {
   description = "Kubernetes namespace in which the DataRobot application will be installed"
   type        = string
