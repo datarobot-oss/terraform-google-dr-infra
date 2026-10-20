@@ -583,6 +583,12 @@ variable "mongodb_network_reservation_ip_offset" {
   description = "Value to offset the network reservation IP"
 }
 
+variable "mongodb_addresses" {
+  type        = list(string)
+  default     = []
+  description = "Explicit IPs for the 50 MongoDB Atlas private endpoint addresses, in index order (e.g. to adopt existing addresses). Empty derives them from the subnet CIDR and mongodb_network_reservation_ip_offset"
+}
+
 variable "mongodb_privatelink_delete_on_create_timeout" {
   description = "Whether to delete the private link endpoint on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources."
   type        = bool
