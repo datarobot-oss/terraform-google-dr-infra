@@ -682,6 +682,12 @@ variable "ingress_nginx" {
   default     = true
 }
 
+variable "ingress_nginx_chart_version" {
+  description = "Version of the ingress-nginx helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`)."
+  type        = string
+  default     = "^4.11.5"
+}
+
 variable "ingress_nginx_values_overrides" {
   description = "Values in raw yaml format to pass to helm."
   type        = string
@@ -712,6 +718,18 @@ variable "cert_manager_letsencrypt_email_address" {
   default     = "user@example.com"
 }
 
+variable "cert_manager_chart_version" {
+  description = "Version of the cert-manager helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`)."
+  type        = string
+  default     = "^1.16.2"
+}
+
+variable "cert_manager_clusterissuers_chart_version" {
+  description = "Version of the dysnix/raw helm chart used to create the letsencrypt ClusterIssuers. Accepts an exact version or a helm semver range (e.g. `>=0.3.2 <1.0.0`)."
+  type        = string
+  default     = ">=0.3.2 <1.0.0"
+}
+
 variable "cert_manager_values_overrides" {
   description = "Values in raw yaml format to pass to helm."
   type        = string
@@ -722,6 +740,12 @@ variable "external_dns" {
   description = "Install the external_dns helm chart to create DNS records for ingress resources matching the domain_name variable. All other external_dns variables are ignored if this variable is false."
   type        = bool
   default     = true
+}
+
+variable "external_dns_chart_version" {
+  description = "Version of the external-dns helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`)."
+  type        = string
+  default     = "^1.19.0"
 }
 
 variable "external_dns_values_overrides" {
@@ -736,6 +760,12 @@ variable "nvidia_device_plugin" {
   default     = true
 }
 
+variable "nvidia_device_plugin_chart_version" {
+  description = "Version of the nvidia-device-plugin helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`)."
+  type        = string
+  default     = ">=0.17.0 <1.0.0"
+}
+
 variable "nvidia_device_plugin_values_overrides" {
   description = "Values in raw yaml format to pass to helm."
   type        = string
@@ -746,6 +776,12 @@ variable "descheduler" {
   description = "Install the descheduler helm chart to enable rescheduling of pods. All other descheduler variables are ignored if this variable is false"
   type        = bool
   default     = true
+}
+
+variable "descheduler_chart_version" {
+  description = "Version of the descheduler helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`)."
+  type        = string
+  default     = ">=0.33.0 <1.0.0"
 }
 
 variable "descheduler_values_overrides" {

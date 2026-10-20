@@ -6,7 +6,7 @@ locals {
 
 module "workload_identity" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  version = "~> 33.0"
+  version = "~> 39.0"
 
   project_id = var.google_project_id
 
@@ -30,7 +30,7 @@ resource "helm_release" "this" {
   namespace  = local.namespace
   repository = "https://kubernetes-sigs.github.io/external-dns"
   chart      = local.name
-  version    = "1.19.0"
+  version    = var.chart_version
 
   create_namespace = true
 

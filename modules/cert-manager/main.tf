@@ -6,7 +6,7 @@ locals {
 
 module "workload_identity" {
   source  = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  version = "~> 33.0"
+  version = "~> 39.0"
 
   project_id = var.google_project_id
 
@@ -30,7 +30,7 @@ resource "helm_release" "this" {
   namespace  = local.namespace
   repository = "oci://quay.io/jetstack/charts"
   chart      = local.name
-  version    = "v1.16.2"
+  version    = var.chart_version
 
   create_namespace = true
 
@@ -51,7 +51,7 @@ resource "helm_release" "letsencrypt_clusterissuers" {
   namespace  = local.namespace
   repository = "https://dysnix.github.io/charts"
   chart      = "raw"
-  version    = "0.3.2"
+  version    = var.clusterissuers_chart_version
 
   create_namespace = true
 

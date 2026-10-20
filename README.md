@@ -286,23 +286,23 @@ The default installation supports DataRobot versions >= 10.0.
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.5 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.6.0 |
-| <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.2 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | ~> 6.6 |
+| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.0 |
 | <a name="requirement_kubectl"></a> [kubectl](#requirement\_kubectl) | ~> 1.19 |
 | <a name="requirement_mongodbatlas"></a> [mongodbatlas](#requirement\_mongodbatlas) | ~> 2.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 6.6.0 |
+| ---- | ------- |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.50.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_app_identity"></a> [app\_identity](#module\_app\_identity) | terraform-google-modules/service-accounts/google | ~> 4.0 |
 | <a name="module_cert_manager"></a> [cert\_manager](#module\_cert\_manager) | ./modules/cert-manager | n/a |
 | <a name="module_cloud_router"></a> [cloud\_router](#module\_cloud\_router) | terraform-google-modules/cloud-router/google | ~> 6.1 |
@@ -325,12 +325,13 @@ The default installation supports DataRobot versions >= 10.0.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [google_artifact_registry_repository.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository) | resource |
 | [google_artifact_registry_repository_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository_iam_member) | resource |
 | [google_compute_global_address.postgres](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
 | [google_compute_global_address.redis](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
 | [google_service_account_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_member) | resource |
+| [google_service_account_iam_member.datarobot_sign_blob](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_member) | resource |
 | [google_service_networking_connection.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_networking_connection) | resource |
 | [google_storage_bucket_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam_member) | resource |
 | [google_client_config.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config) | data source |
@@ -344,10 +345,12 @@ The default installation supports DataRobot versions >= 10.0.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_allow_psc_global_access"></a> [allow\_psc\_global\_access](#input\_allow\_psc\_global\_access) | Whether to allow global access for Private Service Connect | `bool` | `false` | no |
 | <a name="input_app_identity_account_id"></a> [app\_identity\_account\_id](#input\_app\_identity\_account\_id) | account\_id of the DataRobot application service account when create\_app\_identity is true. Defaults to name. | `string` | `null` | no |
 | <a name="input_cert_manager"></a> [cert\_manager](#input\_cert\_manager) | Install the cert-manager helm chart. All other cert\_manager variables are ignored if this variable is false. | `bool` | `true` | no |
+| <a name="input_cert_manager_chart_version"></a> [cert\_manager\_chart\_version](#input\_cert\_manager\_chart\_version) | Version of the cert-manager helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`). | `string` | `"^1.16.2"` | no |
+| <a name="input_cert_manager_clusterissuers_chart_version"></a> [cert\_manager\_clusterissuers\_chart\_version](#input\_cert\_manager\_clusterissuers\_chart\_version) | Version of the dysnix/raw helm chart used to create the letsencrypt ClusterIssuers. Accepts an exact version or a helm semver range (e.g. `>=0.3.2 <1.0.0`). | `string` | `">=0.3.2 <1.0.0"` | no |
 | <a name="input_cert_manager_letsencrypt_clusterissuers"></a> [cert\_manager\_letsencrypt\_clusterissuers](#input\_cert\_manager\_letsencrypt\_clusterissuers) | Whether to create letsencrypt-prod and letsencrypt-staging ClusterIssuers | `bool` | `true` | no |
 | <a name="input_cert_manager_letsencrypt_email_address"></a> [cert\_manager\_letsencrypt\_email\_address](#input\_cert\_manager\_letsencrypt\_email\_address) | Email address for the certificate owner. Let's Encrypt will use this to contact you about expiring certificates, and issues related to your account. Only required if cert\_manager\_letsencrypt\_clusterissuers is true. | `string` | `"user@example.com"` | no |
 | <a name="input_cert_manager_values_overrides"></a> [cert\_manager\_values\_overrides](#input\_cert\_manager\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
@@ -365,8 +368,9 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_create_storage"></a> [create\_storage](#input\_create\_storage) | Create a new Google Storage Bucket to use for DataRobot file storage. Ignored if an existing\_gcs\_bucket\_name is specified. | `bool` | `true` | no |
 | <a name="input_custom_private_endpoints"></a> [custom\_private\_endpoints](#input\_custom\_private\_endpoints) | Configuration for the specific endpoint | <pre>list(object({<br/>    service_name     = string<br/>    private_dns_zone = optional(string, "")<br/>    private_dns_name = optional(string, "")<br/>  }))</pre> | `[]` | no |
 | <a name="input_datarobot_namespace"></a> [datarobot\_namespace](#input\_datarobot\_namespace) | Kubernetes namespace in which the DataRobot application will be installed | `string` | `"dr-app"` | no |
-| <a name="input_datarobot_service_accounts"></a> [datarobot\_service\_accounts](#input\_datarobot\_service\_accounts) | Kubernetes service accounts in the datarobot\_namespace to provide with Storage Blob Data Contributor and AcrPush access | `set(string)` | <pre>[<br/>  "datarobot-storage-sa",<br/>  "dynamic-worker",<br/>  "kubeworker-sa",<br/>  "prediction-server-sa",<br/>  "internal-api-sa",<br/>  "build-service",<br/>  "tileservergl-sa",<br/>  "nbx-notebook-revisions-account",<br/>  "buzok-account",<br/>  "exec-manager-qw",<br/>  "exec-manager-wrangling",<br/>  "lrs-job-manager",<br/>  "blob-view-service"<br/>]</pre> | no |
+| <a name="input_datarobot_service_accounts"></a> [datarobot\_service\_accounts](#input\_datarobot\_service\_accounts) | Kubernetes service accounts in the datarobot\_namespace to provide with Storage Blob Data Contributor and AcrPush access | `set(string)` | <pre>[<br/>  "datarobot-storage-sa",<br/>  "dynamic-worker",<br/>  "kubeworker-sa",<br/>  "prediction-server-sa",<br/>  "internal-api-sa",<br/>  "build-service",<br/>  "tileservergl-sa",<br/>  "nbx-notebook-revisions-account",<br/>  "buzok-account",<br/>  "exec-manager-qw",<br/>  "exec-manager-wrangling",<br/>  "lrs-job-manager",<br/>  "blob-view-service",<br/>  "pipelines-api-service-account",<br/>  "pipelines-electron-runner"<br/>]</pre> | no |
 | <a name="input_descheduler"></a> [descheduler](#input\_descheduler) | Install the descheduler helm chart to enable rescheduling of pods. All other descheduler variables are ignored if this variable is false | `bool` | `true` | no |
+| <a name="input_descheduler_chart_version"></a> [descheduler\_chart\_version](#input\_descheduler\_chart\_version) | Version of the descheduler helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`). | `string` | `">=0.33.0 <1.0.0"` | no |
 | <a name="input_descheduler_values_overrides"></a> [descheduler\_values\_overrides](#input\_descheduler\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
 | <a name="input_dns_zones_force_destroy"></a> [dns\_zones\_force\_destroy](#input\_dns\_zones\_force\_destroy) | Force destroy for the public and private Cloud DNS zones when terminating | `bool` | `false` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Name of the domain to use for the DataRobot application. If create\_dns\_zones is true then zones will be created for this domain. It is also used by the cert-manager helm chart for DNS validation and as a domain filter by the external-dns helm chart. | `string` | `""` | no |
@@ -381,11 +385,15 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_existing_public_dns_zone_name"></a> [existing\_public\_dns\_zone\_name](#input\_existing\_public\_dns\_zone\_name) | ID of existing public hosted zone to use for public DNS records created by external-dns and public LetsEncrypt certificate validation by cert-manager. This is required when create\_dns\_zones is false and ingress\_nginx and internet\_facing\_ingress\_lb are true or when cert\_manager and cert\_manager\_letsencrypt\_clusterissuers are true. | `string` | `null` | no |
 | <a name="input_existing_vpc_name"></a> [existing\_vpc\_name](#input\_existing\_vpc\_name) | Name of an existing Google VPC to use. When specified, other network variables are ignored. | `string` | `null` | no |
 | <a name="input_external_dns"></a> [external\_dns](#input\_external\_dns) | Install the external\_dns helm chart to create DNS records for ingress resources matching the domain\_name variable. All other external\_dns variables are ignored if this variable is false. | `bool` | `true` | no |
+| <a name="input_external_dns_chart_version"></a> [external\_dns\_chart\_version](#input\_external\_dns\_chart\_version) | Version of the external-dns helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`). | `string` | `"^1.19.0"` | no |
 | <a name="input_external_dns_values_overrides"></a> [external\_dns\_values\_overrides](#input\_external\_dns\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
+| <a name="input_gcr_registry_name"></a> [gcr\_registry\_name](#input\_gcr\_registry\_name) | Name of the Artifact Registry repository. Defaults to the name if not specified. | `string` | `null` | no |
 | <a name="input_google_project_id"></a> [google\_project\_id](#input\_google\_project\_id) | The ID of the Google Project where these resources will be created | `string` | n/a | yes |
 | <a name="input_ingress_nginx"></a> [ingress\_nginx](#input\_ingress\_nginx) | Install the ingress-nginx helm chart to use as the ingress controller for the GKE cluster. All other ingress\_nginx variables are ignored if this variable is false. | `bool` | `true` | no |
+| <a name="input_ingress_nginx_chart_version"></a> [ingress\_nginx\_chart\_version](#input\_ingress\_nginx\_chart\_version) | Version of the ingress-nginx helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`). | `string` | `"^4.11.5"` | no |
 | <a name="input_ingress_nginx_values_overrides"></a> [ingress\_nginx\_values\_overrides](#input\_ingress\_nginx\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
 | <a name="input_ingress_psc_consumer_projects"></a> [ingress\_psc\_consumer\_projects](#input\_ingress\_psc\_consumer\_projects) | The list of consumer project IDs that are allowed to connect to the ServiceAttachment. This field can only be used when connectionPreference is ACCEPT\_MANUAL. | `list(string)` | `[]` | no |
+| <a name="input_ingress_psc_service_attachment_name"></a> [ingress\_psc\_service\_attachment\_name](#input\_ingress\_psc\_service\_attachment\_name) | Name of the ServiceAttachment Kubernetes resource. If not specified, defaults to `datarobot-internal-ingress-psc`. | `string` | `"datarobot-internal-ingress-psc"` | no |
 | <a name="input_ingress_psc_subnet_cidr"></a> [ingress\_psc\_subnet\_cidr](#input\_ingress\_psc\_subnet\_cidr) | CIDR range to use for the Private Service Connection used by the ingress-nginx controller. Only used when `create_network` is `true` and an `existing_vpc_name` is not specified. | `string` | `null` | no |
 | <a name="input_ingress_service_name"></a> [ingress\_service\_name](#input\_ingress\_service\_name) | The name of the ingress service to attach the private link to. | `string` | `"ingress-nginx-controller"` | no |
 | <a name="input_install_helm_charts"></a> [install\_helm\_charts](#input\_install\_helm\_charts) | Whether to install helm charts into the target EKS cluster. All other helm chart variables are ignored if this is `false`. | `bool` | `true` | no |
@@ -399,6 +407,7 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_kubernetes_node_pools"></a> [kubernetes\_node\_pools](#input\_kubernetes\_node\_pools) | Map of GKE node pools | `any` | <pre>{<br/>  "drcpu": {<br/>    "disk_size_gb": 200,<br/>    "machine_type": "e2-standard-32",<br/>    "max_count": 10,<br/>    "min_count": 1,<br/>    "name": "drcpu",<br/>    "node_count": 1,<br/>    "node_labels": {<br/>      "datarobot.com/node-capability": "cpu"<br/>    },<br/>    "node_taints": []<br/>  },<br/>  "drgpu": {<br/>    "max_count": 10,<br/>    "min_count": 0,<br/>    "name": "drgpu",<br/>    "node_count": 0,<br/>    "node_labels": {<br/>      "datarobot.com/node-capability": "gpu"<br/>    },<br/>    "node_taints": [<br/>      {<br/>        "effect": "NO_SCHEDULE",<br/>        "key": "nvidia.com/gpu",<br/>        "value": "true"<br/>      }<br/>    ],<br/>    "vm_size": "n1-highmem-4"<br/>  }<br/>}</pre> | no |
 | <a name="input_kubernetes_nodes_cidr"></a> [kubernetes\_nodes\_cidr](#input\_kubernetes\_nodes\_cidr) | The CIDR to use for Kubernetes nodes IP addresses. This is used as the primary IP range for the Kubernetes nodes subnet. | `string` | `null` | no |
 | <a name="input_kubernetes_pod_cidr"></a> [kubernetes\_pod\_cidr](#input\_kubernetes\_pod\_cidr) | The CIDR to use for Kubernetes pod IP addresses. This is used as a secondary IP range within the Kubernetes nodes subnet. | `string` | `"172.16.0.0/15"` | no |
+| <a name="input_mongodb_address_name_prefix"></a> [mongodb\_address\_name\_prefix](#input\_mongodb\_address\_name\_prefix) | Prefix for GCP compute address and forwarding rule names. If not specified, defaults to `<mongodb_name>-mongodb-address`. | `string` | `null` | no |
 | <a name="input_mongodb_admin_username"></a> [mongodb\_admin\_username](#input\_mongodb\_admin\_username) | MongoDB admin username | `string` | `"pcs-mongodb"` | no |
 | <a name="input_mongodb_atlas_auto_scaling_disk_gb_enabled"></a> [mongodb\_atlas\_auto\_scaling\_disk\_gb\_enabled](#input\_mongodb\_atlas\_auto\_scaling\_disk\_gb\_enabled) | Enable Atlas disk size autoscaling | `bool` | `true` | no |
 | <a name="input_mongodb_atlas_disk_size"></a> [mongodb\_atlas\_disk\_size](#input\_mongodb\_atlas\_disk\_size) | Starting atlas disk size | `string` | `"20"` | no |
@@ -409,7 +418,11 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_mongodb_audit_enable"></a> [mongodb\_audit\_enable](#input\_mongodb\_audit\_enable) | Enable database auditing for production instances only(cost incurred 10%) | `bool` | `false` | no |
 | <a name="input_mongodb_backup_schedule"></a> [mongodb\_backup\_schedule](#input\_mongodb\_backup\_schedule) | Configuration for the MongoDB Atlas cloud backup schedule policy items and cross-region copy settings | <pre>object({<br/>    policy_item_hourly = optional(object({<br/>      frequency_interval = optional(number, 6)<br/>      retention_unit     = optional(string, "days")<br/>      retention_value    = optional(number, 7)<br/>    }), {})<br/>    policy_item_daily = optional(object({<br/>      frequency_interval = optional(number, 1)<br/>      retention_unit     = optional(string, "days")<br/>      retention_value    = optional(number, 30)<br/>    }), {})<br/>    policy_item_weekly = optional(object({<br/>      frequency_interval = optional(number, 6)<br/>      retention_unit     = optional(string, "days")<br/>      retention_value    = optional(number, 30)<br/>    }), {})<br/>    policy_item_monthly = optional(object({<br/>      frequency_interval = optional(number, 1)<br/>      retention_unit     = optional(string, "months")<br/>      retention_value    = optional(number, 1)<br/>    }), {})<br/>    copy_settings = optional(object({<br/>      enabled            = optional(bool, true)<br/>      cloud_provider     = optional(string, "GCP")<br/>      frequencies        = optional(list(string), ["DAILY"])<br/>      should_copy_oplogs = optional(bool, false)<br/>    }), {})<br/>  })</pre> | `{}` | no |
 | <a name="input_mongodb_enable_slack_alerts"></a> [mongodb\_enable\_slack\_alerts](#input\_mongodb\_enable\_slack\_alerts) | Enable alert notifications to a Slack channel. When `true`, `slack_api_token` and `slack_notification_channel` must be set. | `string` | `false` | no |
+| <a name="input_mongodb_name"></a> [mongodb\_name](#input\_mongodb\_name) | Name of the MongoDB Atlas instance. If not specified, the `name` variable will be used. | `string` | `null` | no |
 | <a name="input_mongodb_network_reservation_ip_offset"></a> [mongodb\_network\_reservation\_ip\_offset](#input\_mongodb\_network\_reservation\_ip\_offset) | Value to offset the network reservation IP | `number` | `2` | no |
+| <a name="input_mongodb_privatelink_delete_on_create_timeout"></a> [mongodb\_privatelink\_delete\_on\_create\_timeout](#input\_mongodb\_privatelink\_delete\_on\_create\_timeout) | Whether to delete the private link endpoint on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources. | `bool` | `null` | no |
+| <a name="input_mongodb_privatelink_service_delete_on_create_timeout"></a> [mongodb\_privatelink\_service\_delete\_on\_create\_timeout](#input\_mongodb\_privatelink\_service\_delete\_on\_create\_timeout) | Whether to delete the privatelink endpoint service on create timeout. Defaults to null (attribute omitted) to avoid ForceNew on migrated resources. | `bool` | `null` | no |
+| <a name="input_mongodb_project_ip_access_list"></a> [mongodb\_project\_ip\_access\_list](#input\_mongodb\_project\_ip\_access\_list) | CIDR to add to the MongoDB Atlas project IP access list. If not specified, the Kubernetes nodes subnet CIDR is used. | `string` | `null` | no |
 | <a name="input_mongodb_slack_api_token"></a> [mongodb\_slack\_api\_token](#input\_mongodb\_slack\_api\_token) | Slack API token to use for alert notifications. Required when `enable_slack_alerts` is `true`. | `string` | `null` | no |
 | <a name="input_mongodb_slack_notification_channel"></a> [mongodb\_slack\_notification\_channel](#input\_mongodb\_slack\_notification\_channel) | Slack channel to send alert notifications to. Required when `enable_slack_alerts` is `true`. | `string` | `null` | no |
 | <a name="input_mongodb_subnet_cidr"></a> [mongodb\_subnet\_cidr](#input\_mongodb\_subnet\_cidr) | CIDR range to use for MongoDB Atlas VPC Peering. Only used when `create_network` is `true` and an `existing_vpc_name` is not specified. | `string` | `null` | no |
@@ -418,20 +431,32 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_name"></a> [name](#input\_name) | Name to use as a prefix for created resources | `string` | n/a | yes |
 | <a name="input_network_address_space"></a> [network\_address\_space](#input\_network\_address\_space) | The CIDR to use for the VPC and subnets created by this module | `string` | `"10.0.0.0/20"` | no |
 | <a name="input_nvidia_device_plugin"></a> [nvidia\_device\_plugin](#input\_nvidia\_device\_plugin) | Install the nvidia-device-plugin helm chart to expose node GPU resources to the GKE cluster. All other nvidia\_device\_plugin variables are ignored if this variable is false. | `bool` | `true` | no |
+| <a name="input_nvidia_device_plugin_chart_version"></a> [nvidia\_device\_plugin\_chart\_version](#input\_nvidia\_device\_plugin\_chart\_version) | Version of the nvidia-device-plugin helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`). | `string` | `">=0.17.0 <1.0.0"` | no |
 | <a name="input_nvidia_device_plugin_values_overrides"></a> [nvidia\_device\_plugin\_values\_overrides](#input\_nvidia\_device\_plugin\_values\_overrides) | Values in raw yaml format to pass to helm. | `string` | `null` | no |
+| <a name="input_password_constraints"></a> [password\_constraints](#input\_password\_constraints) | Constraints to put on any generated passwords | <pre>object({<br/>    length           = number<br/>    min_lower        = optional(number)<br/>    min_numeric      = optional(number)<br/>    min_upper        = optional(number)<br/>    min_special      = optional(number, 0)<br/>    special          = optional(bool)<br/>    override_special = optional(string)<br/>  })</pre> | <pre>{<br/>  "length": 32,<br/>  "min_lower": 1,<br/>  "min_numeric": 1,<br/>  "min_upper": 1,<br/>  "override_special": "-"<br/>}</pre> | no |
+| <a name="input_postgres_address_name"></a> [postgres\_address\_name](#input\_postgres\_address\_name) | Name of the global address reservation for PostgreSQL VPC peering. If not specified, defaults to `<name>-postgres-address`. | `string` | `null` | no |
 | <a name="input_postgres_availability_type"></a> [postgres\_availability\_type](#input\_postgres\_availability\_type) | The availability type of the Cloud SQL instance, high availability (REGIONAL) or single zone (ZONAL) | `string` | `"REGIONAL"` | no |
 | <a name="input_postgres_cidr"></a> [postgres\_cidr](#input\_postgres\_cidr) | CIDR range to use for PostgreSQL private IP | `string` | `null` | no |
 | <a name="input_postgres_database_flags"></a> [postgres\_database\_flags](#input\_postgres\_database\_flags) | The database flags for the Cloud SQL instance. | <pre>list(object({<br/>    name  = string<br/>    value = string<br/>  }))</pre> | <pre>[<br/>  {<br/>    "name": "password_encryption",<br/>    "value": "scram-sha-256"<br/>  }<br/>]</pre> | no |
-| <a name="input_postgres_database_version"></a> [postgres\_database\_version](#input\_postgres\_database\_version) | The PostgreSQL version to use | `string` | `"POSTGRES_13"` | no |
+| <a name="input_postgres_database_version"></a> [postgres\_database\_version](#input\_postgres\_database\_version) | The PostgreSQL version to use | `string` | `"POSTGRES_17"` | no |
 | <a name="input_postgres_deletion_protection"></a> [postgres\_deletion\_protection](#input\_postgres\_deletion\_protection) | Whether Terraform will be prevented from destroying the instance. When the field is set to true or unset in Terraform state, a terraform apply or terraform destroy that would delete the instance will fail. When the field is set to false, deleting the instance is allowed | `bool` | `false` | no |
 | <a name="input_postgres_disk_autoresize_limit"></a> [postgres\_disk\_autoresize\_limit](#input\_postgres\_disk\_autoresize\_limit) | The maximum size to which storage capacity can be automatically increased. The default value is 0, which specifies that there is no limit. | `number` | `0` | no |
 | <a name="input_postgres_disk_size"></a> [postgres\_disk\_size](#input\_postgres\_disk\_size) | The size of data disk, in GB. Size of a running instance cannot be reduced but can be increased | `number` | `20` | no |
 | <a name="input_postgres_disk_type"></a> [postgres\_disk\_type](#input\_postgres\_disk\_type) | The type of data disk: PD\_SSD, PD\_HDD, or HYPERDISK\_BALANCED | `string` | `"PD_SSD"` | no |
+| <a name="input_postgres_edition"></a> [postgres\_edition](#input\_postgres\_edition) | The edition of the Cloud SQL instance. Can be ENTERPRISE or ENTERPRISE\_PLUS. | `string` | `"ENTERPRISE"` | no |
+| <a name="input_postgres_ipv4_enabled"></a> [postgres\_ipv4\_enabled](#input\_postgres\_ipv4\_enabled) | Whether to assign a public IPv4 address to the Cloud SQL instance. Defaults to false (private-only). | `bool` | `false` | no |
+| <a name="input_postgres_maintenance_window_day"></a> [postgres\_maintenance\_window\_day](#input\_postgres\_maintenance\_window\_day) | Day of the week (1=Monday .. 7=Sunday) for the Cloud SQL maintenance window. | `number` | `1` | no |
+| <a name="input_postgres_maintenance_window_hour"></a> [postgres\_maintenance\_window\_hour](#input\_postgres\_maintenance\_window\_hour) | Hour of the day (0-23 UTC) for the Cloud SQL maintenance window. | `number` | `23` | no |
+| <a name="input_postgres_name"></a> [postgres\_name](#input\_postgres\_name) | Name of the CloudSQL PostgreSQL instance. If not specified, defaults to `<name>-postgres`. | `string` | `null` | no |
 | <a name="input_postgres_tier"></a> [postgres\_tier](#input\_postgres\_tier) | The machine type to use. See tiers for more details and supported versions. Postgres supports only shared-core machine types, and custom machine types such as db-custom-2-13312. | `string` | `"db-custom-4-16384"` | no |
 | <a name="input_private_dns_zone_name"></a> [private\_dns\_zone\_name](#input\_private\_dns\_zone\_name) | Name of the private Cloud DNS zone created when create\_dns\_zones is true. Defaults to <name>-dns-private. | `string` | `null` | no |
 | <a name="input_public_dns_zone_name"></a> [public\_dns\_zone\_name](#input\_public\_dns\_zone\_name) | Name of the public Cloud DNS zone created when create\_dns\_zones is true. Defaults to <name>-dns-public. | `string` | `null` | no |
+| <a name="input_redis_address_name"></a> [redis\_address\_name](#input\_redis\_address\_name) | Name of the global address reservation for Redis VPC peering. If not specified, defaults to `<name>-redis-address`. | `string` | `null` | no |
 | <a name="input_redis_cidr"></a> [redis\_cidr](#input\_redis\_cidr) | CIDR range to use for Redis private IP | `string` | `null` | no |
+| <a name="input_redis_display_name"></a> [redis\_display\_name](#input\_redis\_display\_name) | An arbitrary and optional user-provided name for the instance. | `string` | `null` | no |
+| <a name="input_redis_maintenance_policy"></a> [redis\_maintenance\_policy](#input\_redis\_maintenance\_policy) | Maintenance policy for the Redis instance (weekly window day and start time). | <pre>object({<br/>    day = string<br/>    start_time = object({<br/>      hours   = number<br/>      minutes = number<br/>      seconds = number<br/>      nanos   = number<br/>    })<br/>  })</pre> | `null` | no |
 | <a name="input_redis_memory_size_gb"></a> [redis\_memory\_size\_gb](#input\_redis\_memory\_size\_gb) | Redis memory size in GiB. Defaulted to 1 GiB | `number` | `8` | no |
+| <a name="input_redis_name"></a> [redis\_name](#input\_redis\_name) | Name of the Memorystore Redis instance. If not specified, defaults to `<name>-redis`. | `string` | `null` | no |
 | <a name="input_redis_tier"></a> [redis\_tier](#input\_redis\_tier) | The service tier of the instance: BASIC or STANDARD\_HA | `string` | `"STANDARD_HA"` | no |
 | <a name="input_redis_transit_encryption_mode"></a> [redis\_transit\_encryption\_mode](#input\_redis\_transit\_encryption\_mode) | The TLS mode of the Redis instance, If not provided, TLS is enabled for the instance. Possible values are: SERVER\_AUTHENTICATION, DISABLED. | `string` | `"SERVER_AUTHENTICATION"` | no |
 | <a name="input_region"></a> [region](#input\_region) | Google region to create the resources in | `string` | n/a | yes |
@@ -442,7 +467,7 @@ The default installation supports DataRobot versions >= 10.0.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_artifact_registry_repo_id"></a> [artifact\_registry\_repo\_id](#output\_artifact\_registry\_repo\_id) | ID of the Artifact Registry repository |
 | <a name="output_artifact_registry_repo_path"></a> [artifact\_registry\_repo\_path](#output\_artifact\_registry\_repo\_path) | Path to the Artifact Registry repository |
 | <a name="output_datarobot_service_account_email"></a> [datarobot\_service\_account\_email](#output\_datarobot\_service\_account\_email) | Email of the DataRobot service account |

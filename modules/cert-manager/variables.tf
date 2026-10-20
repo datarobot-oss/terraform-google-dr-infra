@@ -23,6 +23,16 @@ variable "email_address" {
   type        = string
 }
 
+variable "chart_version" {
+  description = "Version or semver range of the helm chart to install"
+  type        = string
+}
+
+variable "clusterissuers_chart_version" {
+  description = "Version or semver range of the dysnix/raw helm chart used to create the letsencrypt ClusterIssuers"
+  type        = string
+}
+
 variable "values_overrides" {
   description = "Values in raw yaml format to pass to helm."
   type        = string
