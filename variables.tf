@@ -240,6 +240,17 @@ variable "kubernetes_cluster_endpoint_access_list" {
   default     = []
 }
 
+variable "kubernetes_cluster_api_endpoint" {
+  description = "Kubernetes cluster API endpoint the kubectl and helm providers in this module connect to. \"default\" uses the cluster's endpoint (public unless kubernetes_cluster_endpoint_public_access is false). \"private\" uses the control plane private endpoint, for running Terraform from inside the cluster's VPC when the public endpoint is restricted."
+  type        = string
+  default     = "default"
+
+  validation {
+    condition     = contains(["default", "private"], var.kubernetes_cluster_api_endpoint)
+    error_message = "kubernetes_cluster_api_endpoint must be one of: default, private."
+  }
+}
+
 variable "kubernetes_node_pools" {
   description = "Map of GKE node pools"
   type        = any
