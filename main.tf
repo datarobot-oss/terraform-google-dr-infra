@@ -215,7 +215,9 @@ data "google_compute_subnetwork" "existing_kubernetes_nodes" {
 locals {
   gke_cluster_name           = try(data.google_container_cluster.existing[0].name, module.kubernetes[0].name, null)
   gke_cluster_ca_certificate = try(data.google_container_cluster.existing[0].master_auth[0].cluster_ca_certificate, module.kubernetes[0].ca_certificate, "")
-  gke_cluster_endpoint       = try(data.google_container_cluster.existing[0].endpoint, module.kubernetes[0].endpoint, "")
+  gke_cluster_endpoint = var.kubernetes_cluster_api_endpoint == "private" ? (
+    try(data.google_container_cluster.existing[0].private_cluster_config[0].private_endpoint, module.kubernetes[0].endpoint, "")
+  ) : try(data.google_container_cluster.existing[0].endpoint, module.kubernetes[0].endpoint, "")
 
   kubernetes_nodes_subnet = try(data.google_compute_subnetwork.existing_kubernetes_nodes[0], module.network[0].subnets["${var.region}/${local.kubernetes_nodes_subnet_name}"], null)
 
@@ -241,7 +243,7 @@ module "kubernetes" {
   subnetwork                    = local.kubernetes_nodes_subnet.name
   ip_range_pods                 = local.kubernetes_pods_range_name
   enable_private_endpoint       = !var.kubernetes_cluster_endpoint_public_access
-  deploy_using_private_endpoint = !var.kubernetes_cluster_endpoint_public_access
+  deploy_using_private_endpoint = !var.kubernetes_cluster_endpoint_public_access || var.kubernetes_cluster_api_endpoint == "private"
   master_ipv4_cidr_block        = local.kubernetes_master_ipv4_cidr
   master_authorized_networks = [for ip in var.kubernetes_cluster_endpoint_access_list : {
     cidr_block   = ip
