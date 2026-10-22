@@ -1,5 +1,5 @@
 variable "chart_version" {
-  description = "Version or semver range of the helm chart to install"
+  description = "Version of the helm chart to install"
   type        = string
 }
 

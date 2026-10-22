@@ -24,12 +24,12 @@ variable "email_address" {
 }
 
 variable "chart_version" {
-  description = "Version or semver range of the helm chart to install"
+  description = "Version of the helm chart to install"
   type        = string
 }
 
 variable "clusterissuers_chart_version" {
-  description = "Version or semver range of the dysnix/raw helm chart used to create the letsencrypt ClusterIssuers"
+  description = "Version of the dysnix/raw helm chart used to create the letsencrypt ClusterIssuers"
   type        = string
 }
 
