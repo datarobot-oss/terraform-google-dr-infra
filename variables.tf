@@ -721,7 +721,7 @@ variable "cert_manager_letsencrypt_email_address" {
 variable "cert_manager_chart_version" {
   description = "Version of the cert-manager helm chart to install. Accepts an exact version or a helm semver range (e.g. `^1.2.3`)."
   type        = string
-  default     = "^1.16.2"
+  default     = "~1.21.2"
 }
 
 variable "cert_manager_clusterissuers_chart_version" {
