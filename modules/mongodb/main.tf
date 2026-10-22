@@ -32,7 +32,7 @@ resource "google_compute_address" "this" {
   name         = "${coalesce(var.address_name_prefix, "${var.name}-mongodb-address")}-${count.index}"
   subnetwork   = var.subnet
   address_type = "INTERNAL"
-  address      = cidrhost(var.subnet_cidr, count.index + var.network_reservation_ip_offset) # GCP reserves first 2 addresses in subnet
+  address      = length(var.addresses) > 0 ? var.addresses[count.index] : cidrhost(var.subnet_cidr, count.index + var.network_reservation_ip_offset) # GCP reserves first 2 addresses in subnet
   region       = var.region
   labels       = var.tags
 

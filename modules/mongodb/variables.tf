@@ -133,6 +133,17 @@ variable "network_reservation_ip_offset" {
   description = "Value to offset the network reservation IP"
 }
 
+variable "addresses" {
+  type        = list(string)
+  default     = []
+  description = "Explicit IPs for the 50 private endpoint addresses, in index order. Empty derives them from subnet_cidr and network_reservation_ip_offset"
+
+  validation {
+    condition     = length(var.addresses) == 0 || length(var.addresses) == 50
+    error_message = "addresses must be empty or hold exactly 50 IPs."
+  }
+}
+
 variable "privatelink_service_delete_on_create_timeout" {
   type        = bool
   default     = null
