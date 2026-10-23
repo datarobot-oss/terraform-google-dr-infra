@@ -554,6 +554,7 @@ module "ingress_nginx" {
 
   internet_facing_ingress_lb = var.internet_facing_ingress_lb
 
+  chart_version    = var.ingress_nginx_chart_version
   values_overrides = var.ingress_nginx_values_overrides
 
   depends_on = [local.gke_cluster_name]
@@ -566,11 +567,13 @@ module "cert_manager" {
 
   google_project_id = var.google_project_id
 
-  name                       = var.name
-  dns_zone_name              = local.public_dns_zone_name
-  letsencrypt_clusterissuers = var.cert_manager_letsencrypt_clusterissuers
-  email_address              = var.cert_manager_letsencrypt_email_address
-  values_overrides           = var.cert_manager_values_overrides
+  name                         = var.name
+  dns_zone_name                = local.public_dns_zone_name
+  letsencrypt_clusterissuers   = var.cert_manager_letsencrypt_clusterissuers
+  email_address                = var.cert_manager_letsencrypt_email_address
+  chart_version                = var.cert_manager_chart_version
+  clusterissuers_chart_version = var.cert_manager_clusterissuers_chart_version
+  values_overrides             = var.cert_manager_values_overrides
 
   depends_on = [local.gke_cluster_name]
 }
@@ -587,6 +590,7 @@ module "external_dns" {
   dns_zone_name    = var.internet_facing_ingress_lb ? local.public_dns_zone_name : local.private_dns_zone_name
   gke_cluster_name = local.gke_cluster_name
   zone_visibility  = var.internet_facing_ingress_lb ? "public" : "private"
+  chart_version    = var.external_dns_chart_version
   values_overrides = var.external_dns_values_overrides
 }
 
@@ -595,6 +599,7 @@ module "nvidia_device_plugin" {
   source = "./modules/nvidia-device-plugin"
   count  = var.install_helm_charts && var.nvidia_device_plugin ? 1 : 0
 
+  chart_version    = var.nvidia_device_plugin_chart_version
   values_overrides = var.nvidia_device_plugin_values_overrides
 
   depends_on = [local.gke_cluster_name]
@@ -604,6 +609,7 @@ module "descheduler" {
   source = "./modules/descheduler"
   count  = var.install_helm_charts && var.descheduler ? 1 : 0
 
+  chart_version    = var.descheduler_chart_version
   values_overrides = var.descheduler_values_overrides
 
   depends_on = [local.gke_cluster_name]

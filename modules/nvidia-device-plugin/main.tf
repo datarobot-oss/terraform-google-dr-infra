@@ -8,7 +8,7 @@ resource "helm_release" "this" {
   namespace  = local.namespace
   repository = "https://nvidia.github.io/k8s-device-plugin"
   chart      = local.name
-  version    = "v0.17.0"
+  version    = var.chart_version
 
   create_namespace = true
 
