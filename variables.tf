@@ -176,6 +176,54 @@ variable "gcr_registry_name" {
 
 
 ################################################################################
+# Pull-Through Cache
+################################################################################
+
+variable "create_pull_through_cache" {
+  description = "Create an Artifact Registry remote repository that caches Docker Hub images. Requires pull_through_cache_dockerhub_username and pull_through_cache_dockerhub_access_token, and the Secret Manager API enabled in the project."
+  type        = bool
+  default     = false
+}
+
+variable "pull_through_cache_dockerhub_username" {
+  description = "Docker Hub username the remote repository uses to authenticate to Docker Hub. Required when create_pull_through_cache is true."
+  type        = string
+  default     = null
+}
+
+variable "pull_through_cache_dockerhub_access_token" {
+  description = "Docker Hub personal access token the remote repository uses to authenticate to Docker Hub. Required when create_pull_through_cache is true. Stored in Secret Manager and in Terraform state."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "pull_through_cache_repository_id" {
+  description = "ID of the Artifact Registry remote repository. Cached images are pulled as <region>-docker.pkg.dev/<project>/<repository_id>/<namespace>/<image>:<tag>."
+  type        = string
+  default     = "dockerhub-remote"
+}
+
+variable "pull_through_cache_secret_id" {
+  description = "ID of the Secret Manager secret holding the Docker Hub access token"
+  type        = string
+  default     = "dockerhub-remote-secret"
+}
+
+variable "pull_through_cache_cleanup_older_than_days" {
+  description = "Delete cached images older than this many days. Set to null to disable the cleanup policies."
+  type        = number
+  default     = 183
+}
+
+variable "pull_through_cache_cleanup_keep_count" {
+  description = "Number of most recent versions of each cached image to keep regardless of pull_through_cache_cleanup_older_than_days. Set to null to disable."
+  type        = number
+  default     = 3
+}
+
+
+################################################################################
 # Kubernetes
 ################################################################################
 

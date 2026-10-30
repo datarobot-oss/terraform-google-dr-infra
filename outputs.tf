@@ -51,6 +51,21 @@ output "artifact_registry_repo_path" {
   value       = try("${var.google_project_id}/${google_artifact_registry_repository.this[0].name}", null)
 }
 
+
+################################################################################
+# Pull-Through Cache
+################################################################################
+
+output "pull_through_cache_registry_url" {
+  description = "Registry URL to pull Docker Hub images through the Artifact Registry remote repository, e.g. <url>/<namespace>/<image>:<tag>"
+  value       = try("${var.region}-docker.pkg.dev/${var.google_project_id}/${google_artifact_registry_repository.pull_through_cache[0].repository_id}", null)
+}
+
+output "pull_through_cache_repository_id" {
+  description = "ID of the Artifact Registry remote repository"
+  value       = try(google_artifact_registry_repository.pull_through_cache[0].id, null)
+}
+
 ################################################################################
 # Kubernetes
 ################################################################################

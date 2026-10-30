@@ -193,6 +193,110 @@ resource "google_artifact_registry_repository" "this" {
 
 
 ################################################################################
+# Pull-Through Cache
+################################################################################
+
+data "google_project" "this" {
+  count = var.create_pull_through_cache ? 1 : 0
+
+  project_id = var.google_project_id
+}
+
+resource "google_secret_manager_secret" "pull_through_cache" {
+  count = var.create_pull_through_cache ? 1 : 0
+
+  project   = var.google_project_id
+  secret_id = var.pull_through_cache_secret_id
+
+  replication {
+    auto {}
+  }
+
+  labels = var.tags
+}
+
+resource "google_secret_manager_secret_version" "pull_through_cache" {
+  count = var.create_pull_through_cache ? 1 : 0
+
+  secret      = google_secret_manager_secret.pull_through_cache[0].id
+  secret_data = var.pull_through_cache_dockerhub_access_token
+
+  lifecycle {
+    precondition {
+      condition     = var.pull_through_cache_dockerhub_username != null && var.pull_through_cache_dockerhub_access_token != null
+      error_message = "pull_through_cache_dockerhub_username and pull_through_cache_dockerhub_access_token are required when create_pull_through_cache is true."
+    }
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "pull_through_cache" {
+  count = var.create_pull_through_cache ? 1 : 0
+
+  project   = var.google_project_id
+  secret_id = google_secret_manager_secret.pull_through_cache[0].secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:service-${data.google_project.this[0].number}@gcp-sa-artifactregistry.iam.gserviceaccount.com"
+}
+
+resource "google_artifact_registry_repository" "pull_through_cache" {
+  count = var.create_pull_through_cache ? 1 : 0
+
+  project  = var.google_project_id
+  location = var.region
+
+  repository_id = var.pull_through_cache_repository_id
+  description   = "dockerhub remote repository"
+  format        = "DOCKER"
+  mode          = "REMOTE_REPOSITORY"
+
+  remote_repository_config {
+    description                 = "dockerhub mirror registry"
+    disable_upstream_validation = true
+
+    docker_repository {
+      public_repository = "DOCKER_HUB"
+    }
+
+    upstream_credentials {
+      username_password_credentials {
+        username                = var.pull_through_cache_dockerhub_username
+        password_secret_version = google_secret_manager_secret_version.pull_through_cache[0].name
+      }
+    }
+  }
+
+  cleanup_policy_dry_run = false
+
+  dynamic "cleanup_policies" {
+    for_each = var.pull_through_cache_cleanup_older_than_days != null ? [1] : []
+    content {
+      id     = "delete-old-images"
+      action = "DELETE"
+      condition {
+        tag_state  = "ANY"
+        older_than = "${var.pull_through_cache_cleanup_older_than_days * 86400}s"
+      }
+    }
+  }
+
+  dynamic "cleanup_policies" {
+    for_each = var.pull_through_cache_cleanup_older_than_days != null && var.pull_through_cache_cleanup_keep_count != null ? [1] : []
+    content {
+      id     = "keep-latest-${var.pull_through_cache_cleanup_keep_count}"
+      action = "KEEP"
+      most_recent_versions {
+        keep_count = var.pull_through_cache_cleanup_keep_count
+      }
+    }
+  }
+
+  labels = var.tags
+
+  depends_on = [google_secret_manager_secret_iam_member.pull_through_cache]
+}
+
+
+################################################################################
 # Kubernetes
 ################################################################################
 
@@ -301,6 +405,14 @@ resource "google_artifact_registry_repository_iam_member" "datarobot" {
 
   repository = local.artifact_registry_repo
   role       = "roles/artifactregistry.repoAdmin"
+  member     = module.app_identity[0].iam_email
+}
+
+resource "google_artifact_registry_repository_iam_member" "datarobot_pull_through_cache" {
+  count = var.create_app_identity && var.create_pull_through_cache ? 1 : 0
+
+  repository = google_artifact_registry_repository.pull_through_cache[0].id
+  role       = "roles/artifactregistry.reader"
   member     = module.app_identity[0].iam_email
 }
 

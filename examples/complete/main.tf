@@ -48,6 +48,13 @@ module "datarobot_infra" {
   create_container_registry = true
 
   ################################################################################
+  # Pull-Through Cache
+  ################################################################################
+  create_pull_through_cache                 = true
+  pull_through_cache_dockerhub_username     = "dockerhub-username"
+  pull_through_cache_dockerhub_access_token = "dockerhub-access-token"
+
+  ################################################################################
   # Kubernetes
   ################################################################################
   create_kubernetes_cluster                 = true
