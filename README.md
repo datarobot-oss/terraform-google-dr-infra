@@ -126,6 +126,27 @@ The DataRobot application will use this registry to host custom images created b
 TBD
 
 
+### Pull-Through Cache
+#### Toggle
+- `create_pull_through_cache` to create an Artifact Registry remote repository for Docker Hub
+
+#### Description
+Creates an Artifact Registry [remote repository](https://cloud.google.com/artifact-registry/docs/repositories/remote-repo) that caches Docker Hub images. Images are pulled as `<region>-docker.pkg.dev/<project>/<pull_through_cache_repository_id>/<namespace>/<image>:<tag>`; the `pull_through_cache_registry_url` output can be used as the DataRobot `global.imageRegistry` value.
+
+The Docker Hub access token is stored in a Secret Manager secret that the Artifact Registry service agent is allowed to read. It is also stored in the Terraform state. The Secret Manager API (`secretmanager.googleapis.com`) must be enabled in the project.
+
+Cached images older than `pull_through_cache_cleanup_older_than_days` are deleted, except for the `pull_through_cache_cleanup_keep_count` most recent versions of each image.
+
+Anything with `roles/artifactregistry.reader` on the repository can pull through it. The DataRobot service account is granted this role. GKE nodes are covered by the project-level grant when `kubernetes_cluster_grant_registry_access` is `true`; when using `existing_gke_cluster_name`, grant the node service account read access yourself.
+
+To manage an existing remote repository and secret, import them with `terraform import`.
+
+#### Permissions
+- `roles/artifactregistry.admin`
+- `roles/secretmanager.admin`
+- `resourcemanager.projects.get`
+
+
 ### Kubernetes
 #### Toggle
 - `create_kubernetes_cluster` to create a new Google Kubernetes Engine Cluster
@@ -326,10 +347,15 @@ The default installation supports DataRobot versions >= 10.0.
 
 | Name | Type |
 | ---- | ---- |
+| [google_artifact_registry_repository.pull_through_cache](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository) | resource |
 | [google_artifact_registry_repository.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository) | resource |
 | [google_artifact_registry_repository_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository_iam_member) | resource |
+| [google_artifact_registry_repository_iam_member.datarobot_pull_through_cache](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository_iam_member) | resource |
 | [google_compute_global_address.postgres](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
 | [google_compute_global_address.redis](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address) | resource |
+| [google_secret_manager_secret.pull_through_cache](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret) | resource |
+| [google_secret_manager_secret_iam_member.pull_through_cache](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_iam_member) | resource |
+| [google_secret_manager_secret_version.pull_through_cache](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/secret_manager_secret_version) | resource |
 | [google_service_account_iam_member.datarobot](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_member) | resource |
 | [google_service_account_iam_member.datarobot_sign_blob](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_member) | resource |
 | [google_service_networking_connection.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_networking_connection) | resource |
@@ -341,6 +367,7 @@ The default installation supports DataRobot versions >= 10.0.
 | [google_compute_subnetwork.existing_mongodb](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetwork) | data source |
 | [google_container_cluster.existing](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/container_cluster) | data source |
 | [google_dns_managed_zone.existing_public_dns_zone](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/dns_managed_zone) | data source |
+| [google_project.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
 ## Inputs
 
@@ -364,6 +391,7 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_create_network"></a> [create\_network](#input\_create\_network) | Create a new Google VPC. Ignored if an existing existing\_vpc\_id is specified. | `bool` | `true` | no |
 | <a name="input_create_observability"></a> [create\_observability](#input\_create\_observability) | Whether to provision observability resources | `bool` | `false` | no |
 | <a name="input_create_postgres"></a> [create\_postgres](#input\_create\_postgres) | Whether to create a CloudSQL for PostgreSQL instance | `bool` | `false` | no |
+| <a name="input_create_pull_through_cache"></a> [create\_pull\_through\_cache](#input\_create\_pull\_through\_cache) | Create an Artifact Registry remote repository that caches Docker Hub images. Requires pull\_through\_cache\_dockerhub\_username and pull\_through\_cache\_dockerhub\_access\_token, and the Secret Manager API enabled in the project. | `bool` | `false` | no |
 | <a name="input_create_redis"></a> [create\_redis](#input\_create\_redis) | Whether to create a Google Memorystore Redis instance | `bool` | `false` | no |
 | <a name="input_create_storage"></a> [create\_storage](#input\_create\_storage) | Create a new Google Storage Bucket to use for DataRobot file storage. Ignored if an existing\_gcs\_bucket\_name is specified. | `bool` | `true` | no |
 | <a name="input_custom_private_endpoints"></a> [custom\_private\_endpoints](#input\_custom\_private\_endpoints) | Configuration for the specific endpoint | <pre>list(object({<br/>    service_name     = string<br/>    private_dns_zone = optional(string, "")<br/>    private_dns_name = optional(string, "")<br/>  }))</pre> | `[]` | no |
@@ -453,6 +481,12 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="input_postgres_tier"></a> [postgres\_tier](#input\_postgres\_tier) | The machine type to use. See tiers for more details and supported versions. Postgres supports only shared-core machine types, and custom machine types such as db-custom-2-13312. | `string` | `"db-custom-4-16384"` | no |
 | <a name="input_private_dns_zone_name"></a> [private\_dns\_zone\_name](#input\_private\_dns\_zone\_name) | Name of the private Cloud DNS zone created when create\_dns\_zones is true. Defaults to <name>-dns-private. | `string` | `null` | no |
 | <a name="input_public_dns_zone_name"></a> [public\_dns\_zone\_name](#input\_public\_dns\_zone\_name) | Name of the public Cloud DNS zone created when create\_dns\_zones is true. Defaults to <name>-dns-public. | `string` | `null` | no |
+| <a name="input_pull_through_cache_cleanup_keep_count"></a> [pull\_through\_cache\_cleanup\_keep\_count](#input\_pull\_through\_cache\_cleanup\_keep\_count) | Number of most recent versions of each cached image to keep regardless of pull\_through\_cache\_cleanup\_older\_than\_days. Set to null to disable. | `number` | `3` | no |
+| <a name="input_pull_through_cache_cleanup_older_than_days"></a> [pull\_through\_cache\_cleanup\_older\_than\_days](#input\_pull\_through\_cache\_cleanup\_older\_than\_days) | Delete cached images older than this many days. Set to null to disable the cleanup policies. | `number` | `183` | no |
+| <a name="input_pull_through_cache_dockerhub_access_token"></a> [pull\_through\_cache\_dockerhub\_access\_token](#input\_pull\_through\_cache\_dockerhub\_access\_token) | Docker Hub personal access token the remote repository uses to authenticate to Docker Hub. Required when create\_pull\_through\_cache is true. Stored in Secret Manager and in Terraform state. | `string` | `null` | no |
+| <a name="input_pull_through_cache_dockerhub_username"></a> [pull\_through\_cache\_dockerhub\_username](#input\_pull\_through\_cache\_dockerhub\_username) | Docker Hub username the remote repository uses to authenticate to Docker Hub. Required when create\_pull\_through\_cache is true. | `string` | `null` | no |
+| <a name="input_pull_through_cache_repository_id"></a> [pull\_through\_cache\_repository\_id](#input\_pull\_through\_cache\_repository\_id) | ID of the Artifact Registry remote repository. Cached images are pulled as <region>-docker.pkg.dev/<project>/<repository\_id>/<namespace>/<image>:<tag>. | `string` | `"dockerhub-remote"` | no |
+| <a name="input_pull_through_cache_secret_id"></a> [pull\_through\_cache\_secret\_id](#input\_pull\_through\_cache\_secret\_id) | ID of the Secret Manager secret holding the Docker Hub access token | `string` | `"dockerhub-remote-secret"` | no |
 | <a name="input_redis_address_name"></a> [redis\_address\_name](#input\_redis\_address\_name) | Name of the global address reservation for Redis VPC peering. If not specified, defaults to `<name>-redis-address`. | `string` | `null` | no |
 | <a name="input_redis_cidr"></a> [redis\_cidr](#input\_redis\_cidr) | CIDR range to use for Redis private IP | `string` | `null` | no |
 | <a name="input_redis_display_name"></a> [redis\_display\_name](#input\_redis\_display\_name) | An arbitrary and optional user-provided name for the instance. | `string` | `null` | no |
@@ -482,6 +516,8 @@ The default installation supports DataRobot versions >= 10.0.
 | <a name="output_private_dns_zone_name"></a> [private\_dns\_zone\_name](#output\_private\_dns\_zone\_name) | Name of the private DNS zone |
 | <a name="output_public_dns_zone_name"></a> [public\_dns\_zone\_name](#output\_public\_dns\_zone\_name) | Name of the public DNS zone |
 | <a name="output_public_dns_zone_name_servers"></a> [public\_dns\_zone\_name\_servers](#output\_public\_dns\_zone\_name\_servers) | Name servers of the public DNS zone |
+| <a name="output_pull_through_cache_registry_url"></a> [pull\_through\_cache\_registry\_url](#output\_pull\_through\_cache\_registry\_url) | Registry URL to pull Docker Hub images through the Artifact Registry remote repository, e.g. <url>/<namespace>/<image>:<tag> |
+| <a name="output_pull_through_cache_repository_id"></a> [pull\_through\_cache\_repository\_id](#output\_pull\_through\_cache\_repository\_id) | ID of the Artifact Registry remote repository |
 | <a name="output_redis_endpoint"></a> [redis\_endpoint](#output\_redis\_endpoint) | Google Memorystore Redis endpoint |
 | <a name="output_redis_password"></a> [redis\_password](#output\_redis\_password) | Google Memorystore Redis instance primary access key |
 | <a name="output_redis_port"></a> [redis\_port](#output\_redis\_port) | Google Memorystore Redis port |

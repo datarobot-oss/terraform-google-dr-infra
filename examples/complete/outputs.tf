@@ -8,6 +8,11 @@ output "artifact_registry_repo" {
   value       = module.datarobot_infra.artifact_registry_repo_path
 }
 
+output "pull_through_cache_registry_url" {
+  description = "Registry URL to pull Docker Hub images through the Artifact Registry remote repository"
+  value       = module.datarobot_infra.pull_through_cache_registry_url
+}
+
 output "storage_bucket_name" {
   description = "Name of the GCS storage bucket"
   value       = module.datarobot_infra.storage_bucket_name
