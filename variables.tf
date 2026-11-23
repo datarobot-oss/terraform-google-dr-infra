@@ -375,6 +375,7 @@ variable "datarobot_service_accounts" {
     "blob-view-service",
     "pipelines-api-service-account",
     "pipelines-electron-runner",
+    "workload-api-account"
   ]
 }
 
